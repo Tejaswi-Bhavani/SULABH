@@ -102,7 +102,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
       })
 
-      if (error) throw error
+      if (error) {
+        // Handle specific error codes
+        if (error.message?.includes('User already registered') || error.message?.includes('user_already_exists')) {
+          throw new Error('This email is already registered. Please log in or use a different email.')
+        }
+        throw error
+      }
 
       if (data.user) {
         // Update profile with additional information
@@ -119,6 +125,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         await loadUserProfile(data.user)
       }
     } catch (error: any) {
+      // Re-throw the specific error message if it's our custom one
+      if (error.message?.includes('This email is already registered')) {
+        throw error
+      }
       throw new Error(error.message || 'Registration failed')
     } finally {
       setLoading(false)
