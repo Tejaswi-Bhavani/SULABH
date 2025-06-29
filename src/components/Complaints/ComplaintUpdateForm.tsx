@@ -106,7 +106,7 @@ const ComplaintUpdateForm: React.FC<ComplaintUpdateFormProps> = ({
       if (profileError) throw profileError
 
       // Add update to complaint_updates
-      const { data: update, error: updateError } = await supabase
+      const { error: updateError } = await supabase
         .from('complaint_updates')
         .insert({
           complaint_id: complaintId,
@@ -115,8 +115,6 @@ const ComplaintUpdateForm: React.FC<ComplaintUpdateFormProps> = ({
           updated_by: user.id,
           attachments: attachments.map(file => file.url)
         })
-        .select()
-        .single()
 
       if (updateError) throw updateError
 
@@ -168,8 +166,6 @@ const ComplaintUpdateForm: React.FC<ComplaintUpdateFormProps> = ({
       setLoading(false)
     }
   }
-
-  const StatusIcon = getStatusIcon(selectedStatus)
 
   return (
     <div className="card">
