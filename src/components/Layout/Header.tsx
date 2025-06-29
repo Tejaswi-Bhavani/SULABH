@@ -5,6 +5,7 @@ import { Menu, X, User, LogOut, Globe, BarChart3 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import LanguageSwitcher from '../Common/LanguageSwitcher'
 import NotificationBell from '../Common/NotificationBell'
+import { LotusIcon } from '../Common/CulturalElements'
 
 const Header: React.FC = () => {
   const { t } = useTranslation()
@@ -21,10 +22,12 @@ const Header: React.FC = () => {
 
   const navigation = [
     { name: t('nav.home'), href: '/' },
+    { name: t('nav.suggestions'), href: '/suggestions' },
     { name: t('nav.trackComplaint'), href: '/track' },
     ...(user ? [
       { name: t('nav.dashboard'), href: '/dashboard' },
       { name: t('nav.submitComplaint'), href: '/submit-complaint' },
+      { name: t('nav.submitSuggestion'), href: '/submit-suggestion' },
       ...(user.role === 'admin' ? [
         { name: t('nav.admin'), href: '/admin' },
         { name: 'Reports', href: '/admin/reports' }
@@ -32,6 +35,9 @@ const Header: React.FC = () => {
       ...(user.role === 'authority' ? [
         { name: t('nav.authority'), href: '/authority' },
         { name: 'Reports', href: '/reports' }
+      ] : []),
+      ...(user.role === 'ngo' ? [
+        { name: 'NGO Dashboard', href: '/ngo' }
       ] : [])
     ] : [])
   ]
@@ -43,22 +49,27 @@ const Header: React.FC = () => {
           {/* Logo */}
           <div className="flex items-center">
             <Link to="/" className="flex items-center space-x-2">
-              <img 
-                src="/favicon.svg" 
-                alt="SULABH Logo" 
-                className="w-8 h-8"
-                onError={(e) => {
-                  // Fallback to text logo if image fails to load
-                  const target = e.target as HTMLImageElement;
-                  target.style.display = 'none';
-                  const fallback = target.nextElementSibling as HTMLElement;
-                  if (fallback) fallback.style.display = 'flex';
-                }}
-              />
-              <div className="w-8 h-8 bg-primary-600 rounded-lg items-center justify-center hidden">
-                <span className="text-white font-bold text-sm">S</span>
+              <div className="flex items-center space-x-1">
+                <LotusIcon className="w-8 h-8 text-primary-600" />
+                <img 
+                  src="/favicon.svg" 
+                  alt="SULABH Logo" 
+                  className="w-8 h-8"
+                  onError={(e) => {
+                    // Fallback to text logo if image fails to load
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                    const fallback = target.nextElementSibling as HTMLElement;
+                    if (fallback) fallback.style.display = 'flex';
+                  }}
+                />
+                <div className="w-8 h-8 bg-primary-600 rounded-lg items-center justify-center hidden">
+                  <span className="text-white font-bold text-sm">S</span>
+                </div>
               </div>
-              <span className="text-xl font-bold text-gray-900">SULABH</span>
+              <span className="text-xl font-bold text-gray-900 bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent">
+                SULABH
+              </span>
             </Link>
           </div>
 
@@ -68,9 +79,10 @@ const Header: React.FC = () => {
               <Link
                 key={item.name}
                 to={item.href}
-                className="text-gray-700 hover:text-primary-600 px-3 py-2 text-sm font-medium transition-colors duration-200"
+                className="text-gray-700 hover:text-primary-600 px-3 py-2 text-sm font-medium transition-colors duration-200 relative group"
               >
                 {item.name}
+                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-primary-600 transition-all duration-200 group-hover:w-full"></span>
               </Link>
             ))}
           </nav>
@@ -85,9 +97,13 @@ const Header: React.FC = () => {
               <div className="relative">
                 <button
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                  className="flex items-center space-x-2 text-gray-700 hover:text-primary-600 transition-colors duration-200"
+                  className="flex items-center space-x-2 text-gray-700 hover:text-primary-600 transition-colors duration-200 p-2 rounded-lg hover:bg-primary-50"
                 >
-                  <User className="w-5 h-5" />
+                  <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-full flex items-center justify-center">
+                    <span className="text-white font-medium text-sm">
+                      {user.firstName.charAt(0)}{user.lastName.charAt(0)}
+                    </span>
+                  </div>
                   <span className="hidden sm:block text-sm font-medium">
                     {user.firstName} {user.lastName}
                   </span>
@@ -95,6 +111,10 @@ const Header: React.FC = () => {
                 
                 {isUserMenuOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
+                    <div className="px-4 py-2 border-b border-gray-100">
+                      <p className="text-sm font-medium text-gray-900">{user.firstName} {user.lastName}</p>
+                      <p className="text-xs text-gray-500 capitalize">{user.role}</p>
+                    </div>
                     <Link
                       to="/profile"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-200"
@@ -122,7 +142,7 @@ const Header: React.FC = () => {
                 </Link>
                 <Link
                   to="/register"
-                  className="btn-primary text-sm"
+                  className="bg-gradient-to-r from-primary-600 to-secondary-600 text-white hover:from-primary-700 hover:to-secondary-700 font-medium py-2 px-4 rounded-lg transition-all duration-200 transform hover:scale-105 text-sm"
                 >
                   {t('nav.register')}
                 </Link>
@@ -147,7 +167,7 @@ const Header: React.FC = () => {
                 <Link
                   key={item.name}
                   to={item.href}
-                  className="text-gray-700 hover:text-primary-600 px-3 py-2 text-sm font-medium transition-colors duration-200"
+                  className="text-gray-700 hover:text-primary-600 px-3 py-2 text-sm font-medium transition-colors duration-200 rounded-lg hover:bg-primary-50"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   {item.name}
@@ -165,7 +185,7 @@ const Header: React.FC = () => {
                   </Link>
                   <Link
                     to="/register"
-                    className="btn-primary text-sm mx-3"
+                    className="bg-gradient-to-r from-primary-600 to-secondary-600 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 text-sm mx-3"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     {t('nav.register')}

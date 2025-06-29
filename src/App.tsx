@@ -13,6 +13,9 @@ import RegisterPage from './pages/RegisterPage'
 import DashboardPage from './pages/DashboardPage'
 import SubmitComplaintPage from './pages/SubmitComplaintPage'
 import SubmitSuggestionPage from './pages/SubmitSuggestionPage'
+import SuggestionsPage from './pages/SuggestionsPage'
+import SuggestionDetailsPage from './pages/SuggestionDetailsPage'
+import NGODashboardPage from './pages/NGODashboardPage'
 import TrackComplaintPage from './pages/TrackComplaintPage'
 import ComplaintDetailsPage from './pages/ComplaintDetailsPage'
 import AdminDashboardPage from './pages/AdminDashboardPage'
@@ -35,6 +38,8 @@ function App() {
                       <Route path="/login" element={<LoginPage />} />
                       <Route path="/register" element={<RegisterPage />} />
                       <Route path="/track" element={<TrackComplaintPage />} />
+                      <Route path="/suggestions" element={<SuggestionsPage />} />
+                      <Route path="/suggestion/:id" element={<SuggestionDetailsPage />} />
                       <Route path="/complaint/:id" element={<ComplaintDetailsPage />} />
                       
                       {/* Protected Routes */}
@@ -51,6 +56,11 @@ function App() {
                       <Route path="/submit-suggestion" element={
                         <ProtectedRoute>
                           <SubmitSuggestionPage />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/ngo" element={
+                        <ProtectedRoute requiredRole="ngo">
+                          <NGODashboardPage />
                         </ProtectedRoute>
                       } />
                       <Route path="/reports" element={
