@@ -103,8 +103,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       })
 
       if (error) {
-        // Handle specific error codes
-        if (error.message?.includes('User already registered') || error.message?.includes('user_already_exists')) {
+        // Handle specific error codes and messages
+        if (error.message?.includes('User already registered') || 
+            error.message?.includes('user_already_exists') ||
+            (error as any).code === 'user_already_exists') {
           throw new Error('This email is already registered. Please log in or use a different email.')
         }
         throw error
