@@ -22,6 +22,9 @@ import AdminDashboardPage from './pages/AdminDashboardPage'
 import AuthorityDashboardPage from './pages/AuthorityDashboardPage'
 import ReportsPage from './pages/ReportsPage'
 import EnhancedReportsPage from './pages/EnhancedReportsPage'
+import TestSuite from './components/Testing/TestSuite'
+import PerformanceMonitor from './components/Performance/PerformanceMonitor'
+import AccessibilityChecker from './components/Accessibility/AccessibilityChecker'
 import ProtectedRoute from './components/Auth/ProtectedRoute'
 
 function App() {
@@ -42,6 +45,11 @@ function App() {
                       <Route path="/suggestions" element={<SuggestionsPage />} />
                       <Route path="/suggestion/:id" element={<SuggestionDetailsPage />} />
                       <Route path="/complaint/:id" element={<ComplaintDetailsPage />} />
+                      
+                      {/* Testing and Development Routes */}
+                      <Route path="/test-suite" element={<TestSuite />} />
+                      <Route path="/performance" element={<PerformanceMonitor />} />
+                      <Route path="/accessibility" element={<AccessibilityChecker />} />
                       
                       {/* Protected Routes */}
                       <Route path="/dashboard" element={
