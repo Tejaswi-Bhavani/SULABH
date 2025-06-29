@@ -43,7 +43,19 @@ const Header: React.FC = () => {
           {/* Logo */}
           <div className="flex items-center">
             <Link to="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
+              <img 
+                src="/favicon.svg" 
+                alt="SULABH Logo" 
+                className="w-8 h-8"
+                onError={(e) => {
+                  // Fallback to text logo if image fails to load
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                  const fallback = target.nextElementSibling as HTMLElement;
+                  if (fallback) fallback.style.display = 'flex';
+                }}
+              />
+              <div className="w-8 h-8 bg-primary-600 rounded-lg items-center justify-center hidden">
                 <span className="text-white font-bold text-sm">S</span>
               </div>
               <span className="text-xl font-bold text-gray-900">SULABH</span>

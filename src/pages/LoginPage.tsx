@@ -48,7 +48,19 @@ const LoginPage: React.FC = () => {
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <div className="flex justify-center">
-            <div className="w-16 h-16 bg-primary-600 rounded-full flex items-center justify-center">
+            <img 
+              src="/favicon.svg" 
+              alt="SULABH Logo" 
+              className="w-16 h-16"
+              onError={(e) => {
+                // Fallback to text logo if image fails to load
+                const target = e.target as HTMLImageElement;
+                target.style.display = 'none';
+                const fallback = target.nextElementSibling as HTMLElement;
+                if (fallback) fallback.style.display = 'flex';
+              }}
+            />
+            <div className="w-16 h-16 bg-primary-600 rounded-full items-center justify-center hidden">
               <span className="text-white font-bold text-2xl">S</span>
             </div>
           </div>
