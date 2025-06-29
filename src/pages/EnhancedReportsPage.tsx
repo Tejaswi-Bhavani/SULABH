@@ -10,7 +10,8 @@ import {
   CheckCircle,
   FileText,
   Calendar,
-  Download
+  Download,
+  Lightbulb
 } from 'lucide-react'
 import { useReports, ReportData } from '../contexts/ReportsContext'
 import { useAuth } from '../contexts/AuthContext'
@@ -23,6 +24,7 @@ import {
   SatisfactionRadarChart,
   ResolutionTimeChart
 } from '../components/Reports/AdvancedCharts'
+import { supabase } from '../lib/supabase'
 
 const EnhancedReportsPage: React.FC = () => {
   const { t } = useTranslation()
@@ -43,12 +45,15 @@ const EnhancedReportsPage: React.FC = () => {
   const [complaintData, setComplaintData] = useState<any[]>([])
   const [feedbackData, setFeedbackData] = useState<any>(null)
   const [userActivityData, setUserActivityData] = useState<any>(null)
+  const [predictiveData, setPredictiveData] = useState<any>(null)
+  const [predictiveLoading, setPredictiveLoading] = useState(false)
 
   // Chart refs for export
   const trendsChartRef = useRef<HTMLDivElement>(null)
   const categoryChartRef = useRef<HTMLDivElement>(null)
   const performanceChartRef = useRef<HTMLDivElement>(null)
   const satisfactionChartRef = useRef<HTMLDivElement>(null)
+  const predictiveChartRef = useRef<HTMLDivElement>(null)
 
   // Filters state
   const [filters, setFilters] = useState({
@@ -81,9 +86,32 @@ const EnhancedReportsPage: React.FC = () => {
       } else if (selectedReport === 'users') {
         const userActivity = await generateUserActivityReport()
         setUserActivityData(userActivity)
+      } else if (selectedReport === 'predictive') {
+        loadPredictiveData()
       }
     } catch (error) {
       console.error('Error loading reports:', error)
+    }
+  }
+
+  const loadPredictiveData = async () => {
+    setPredictiveLoading(true)
+    try {
+      const { data, error } = await supabase.functions.invoke('predict-trends', {
+        body: {
+          period: selectedPeriod,
+          category: filters.category || null,
+          department: filters.department || null,
+          months: 3
+        }
+      })
+
+      if (error) throw error
+      setPredictiveData(data)
+    } catch (error) {
+      console.error('Error loading predictive data:', error)
+    } finally {
+      setPredictiveLoading(false)
     }
   }
 
@@ -108,6 +136,9 @@ const EnhancedReportsPage: React.FC = () => {
           const userActivity = await generateUserActivityReport()
           setUserActivityData(userActivity)
           break
+        case 'predictive':
+          loadPredictiveData()
+          break
       }
     } catch (error) {
       console.error('Error loading report:', error)
@@ -122,6 +153,8 @@ const EnhancedReportsPage: React.FC = () => {
     if (selectedReport === 'complaints') {
       const complaints = await generateComplaintReport(filters)
       setComplaintData(complaints)
+    } else if (selectedReport === 'predictive') {
+      loadPredictiveData()
     }
   }
 
@@ -172,6 +205,19 @@ const EnhancedReportsPage: React.FC = () => {
     values: reportData.departmentPerformance.map(d => d.satisfactionScore)
   } : null
 
+  // Prepare predictive chart data
+  const predictiveChartData = predictiveData ? {
+    labels: [...predictiveData.historical.map((d: any) => d.period), ...predictiveData.predictions.map((d: any) => d.period)],
+    historical: {
+      submitted: [...predictiveData.historical.map((d: any) => d.total), ...Array(predictiveData.predictions.length).fill(null)],
+      resolved: [...predictiveData.historical.map((d: any) => d.resolved), ...Array(predictiveData.predictions.length).fill(null)]
+    },
+    predictions: {
+      submitted: [...Array(predictiveData.historical.length).fill(null), ...predictiveData.predictions.map((d: any) => d.total)],
+      resolved: [...Array(predictiveData.historical.length).fill(null), ...predictiveData.predictions.map((d: any) => d.resolved)]
+    }
+  } : null
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -209,9 +255,10 @@ const EnhancedReportsPage: React.FC = () => {
 
         {/* Report Type Selector */}
         <div className="mb-8">
-          <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
+          <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg overflow-x-auto">
             {[
               { id: 'dashboard', label: 'Executive Dashboard', icon: BarChart3 },
+              { id: 'predictive', label: 'Predictive Analytics', icon: Lightbulb },
               { id: 'escalation', label: 'Escalation Analysis', icon: AlertTriangle },
               { id: 'complaints', label: 'Detailed Complaints', icon: FileText },
               { id: 'feedback', label: 'Satisfaction Analysis', icon: Star },
@@ -490,6 +537,163 @@ const EnhancedReportsPage: React.FC = () => {
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {/* Predictive Analytics */}
+        {selectedReport === 'predictive' && (
+          <div className="space-y-6">
+            <ReportFilters
+              filters={filters}
+              onFilterChange={handleFilterChange}
+              onApplyFilters={handleApplyFilters}
+              onResetFilters={handleResetFilters}
+              loading={predictiveLoading}
+            />
+
+            <div className="card">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Complaint Volume Prediction (Next 3 Months)
+                </h3>
+                <ReportExporter
+                  data={predictiveData ? [...predictiveData.historical, ...predictiveData.predictions] : []}
+                  reportType="predictive_trends"
+                  title="Complaint Volume Prediction"
+                  chartRef={predictiveChartRef}
+                  columns={[
+                    { key: 'period', label: 'Period' },
+                    { key: 'total', label: 'Total Complaints' },
+                    { key: 'resolved', label: 'Resolved' },
+                    { key: 'pending', label: 'Pending' },
+                    { key: 'isPrediction', label: 'Is Prediction' }
+                  ]}
+                />
+              </div>
+
+              {predictiveLoading ? (
+                <div className="text-center py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
+                  <p className="text-gray-600">Generating predictive analytics...</p>
+                </div>
+              ) : predictiveData ? (
+                <div ref={predictiveChartRef}>
+                  <div className="h-80">
+                    {/* Custom chart for predictive data */}
+                    <div className="mb-4 p-4 bg-primary-50 border border-primary-200 rounded-lg">
+                      <div className="flex items-start space-x-3">
+                        <Lightbulb className="w-5 h-5 text-primary-600 mt-0.5" />
+                        <div>
+                          <h4 className="font-medium text-primary-900">Predictive Insights</h4>
+                          <p className="text-sm text-primary-700">
+                            Based on historical trends, we predict {predictiveData.predictions[2].total} complaints in {predictiveData.predictions[2].period}, 
+                            with approximately {predictiveData.predictions[2].resolved} resolved cases.
+                            {predictiveData.predictions[2].total > predictiveData.historical[predictiveData.historical.length - 1].total ? 
+                              ' This represents an increase in complaint volume.' : 
+                              ' This represents a decrease in complaint volume.'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Render chart using ComplaintTrendsChart component */}
+                    <ComplaintTrendsChart 
+                      data={{
+                        labels: predictiveChartData.labels,
+                        submitted: [...predictiveChartData.historical.submitted, ...predictiveChartData.predictions.submitted.map((v: any) => v !== null ? v : undefined)],
+                        resolved: [...predictiveChartData.historical.resolved, ...predictiveChartData.predictions.resolved.map((v: any) => v !== null ? v : undefined)],
+                        pending: [...predictiveData.historical.map((d: any) => d.pending), ...predictiveData.predictions.map((d: any) => d.pending)]
+                      }}
+                    />
+                  </div>
+                  
+                  <div className="mt-6 border-t border-gray-200 pt-4">
+                    <h4 className="font-medium text-gray-900 mb-3">Prediction Details</h4>
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Period
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Predicted Complaints
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Predicted Resolutions
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Predicted Pending
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {predictiveData.predictions.map((prediction: any, index: number) => (
+                            <tr key={index} className="bg-primary-50">
+                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-primary-900">
+                                {prediction.period} (Predicted)
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-primary-800">
+                                {prediction.total}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-primary-800">
+                                {prediction.resolved}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-primary-800">
+                                {prediction.pending}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <Lightbulb className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-600">
+                    Apply filters and click "Apply Filters" to generate predictive analytics.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className="card">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                About Predictive Analytics
+              </h3>
+              <div className="space-y-4 text-gray-700">
+                <p>
+                  Our predictive analytics uses historical complaint data to forecast future trends. 
+                  The system analyzes patterns in complaint submissions, resolutions, and other metrics 
+                  to provide insights into expected future volumes.
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="p-4 bg-gray-50 rounded-lg">
+                    <h4 className="font-medium text-gray-900 mb-2">Methodology</h4>
+                    <p className="text-sm">
+                      We use linear regression and time series analysis to identify trends and 
+                      seasonal patterns in complaint data.
+                    </p>
+                  </div>
+                  <div className="p-4 bg-gray-50 rounded-lg">
+                    <h4 className="font-medium text-gray-900 mb-2">Accuracy</h4>
+                    <p className="text-sm">
+                      Predictions are most accurate for short-term forecasts and may vary based on 
+                      external factors not captured in historical data.
+                    </p>
+                  </div>
+                  <div className="p-4 bg-gray-50 rounded-lg">
+                    <h4 className="font-medium text-gray-900 mb-2">Applications</h4>
+                    <p className="text-sm">
+                      Use these predictions for resource planning, staffing decisions, and 
+                      proactive issue management.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 

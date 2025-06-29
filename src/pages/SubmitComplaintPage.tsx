@@ -8,13 +8,15 @@ import {
   FileText, 
   MapPin, 
   AlertCircle,
-  CheckCircle
+  CheckCircle,
+  Mic
 } from 'lucide-react'
 import { useComplaints } from '../contexts/ComplaintContext'
 import { useNotifications, emailTemplates } from '../contexts/NotificationContext'
 import { useAuth } from '../contexts/AuthContext'
 import { ComplaintCategory, Priority } from '../types'
 import FileUpload from '../components/Common/FileUpload'
+import VoiceInput from '../components/Complaints/VoiceInput'
 import toast from 'react-hot-toast'
 
 const complaintSchema = z.object({
@@ -28,7 +30,7 @@ const complaintSchema = z.object({
 type ComplaintFormData = z.infer<typeof complaintSchema>
 
 const SubmitComplaintPage: React.FC = () => {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { user } = useAuth()
   const { submitComplaint, loading } = useComplaints()
   const { sendNotification, sendEmailNotification } = useNotifications()
@@ -36,18 +38,23 @@ const SubmitComplaintPage: React.FC = () => {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [attachments, setAttachments] = useState<any[]>([])
+  const [showVoiceInput, setShowVoiceInput] = useState(false)
 
   const {
     register,
     handleSubmit,
     formState: { errors },
-    reset
+    reset,
+    setValue,
+    watch
   } = useForm<ComplaintFormData>({
     resolver: zodResolver(complaintSchema),
     defaultValues: {
       priority: 'medium'
     }
   })
+
+  const currentDescription = watch('description')
 
   const categories: { value: ComplaintCategory; label: string }[] = [
     { value: 'sanitation', label: t('complaint.submit.categories.sanitation') },
@@ -67,6 +74,11 @@ const SubmitComplaintPage: React.FC = () => {
 
   const handleFilesUploaded = (files: any[]) => {
     setAttachments(files)
+  }
+
+  const handleVoiceTranscript = (transcript: string) => {
+    const newDescription = currentDescription ? `${currentDescription} ${transcript}` : transcript
+    setValue('description', newDescription)
   }
 
   const onSubmit = async (data: ComplaintFormData) => {
@@ -198,11 +210,31 @@ const SubmitComplaintPage: React.FC = () => {
               )}
             </div>
 
-            {/* Description */}
+            {/* Description with Voice Input */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                {t('complaint.submit.description')} *
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  {t('complaint.submit.description')} *
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setShowVoiceInput(!showVoiceInput)}
+                  className="flex items-center space-x-1 text-sm text-primary-600 hover:text-primary-700"
+                >
+                  <Mic className="w-4 h-4" />
+                  <span>Voice Input</span>
+                </button>
+              </div>
+              
+              {showVoiceInput && (
+                <div className="mb-4">
+                  <VoiceInput
+                    onTranscript={handleVoiceTranscript}
+                    language={i18n.language}
+                  />
+                </div>
+              )}
+              
               <textarea
                 {...register('description')}
                 rows={6}

@@ -37,7 +37,8 @@
     "react-chartjs-2": "^5.2.0",
     "html2canvas": "^1.4.1",
     "lodash-es": "^4.17.21",
-    "dompurify": "^3.0.5"
+    "dompurify": "^3.0.5",
+    "twilio": "^4.19.0"
   },
   "devDependencies": {
     "@types/react": "^18.2.43",

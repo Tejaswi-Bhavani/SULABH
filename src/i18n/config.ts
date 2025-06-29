@@ -6,6 +6,9 @@ import enTranslations from './locales/en.json'
 import hiTranslations from './locales/hi.json'
 import bnTranslations from './locales/bn.json'
 import mrTranslations from './locales/mr.json'
+import taTranslations from './locales/ta.json'
+import teTranslations from './locales/te.json'
+import knTranslations from './locales/kn.json'
 
 const resources = {
   en: {
@@ -19,6 +22,15 @@ const resources = {
   },
   mr: {
     translation: mrTranslations
+  },
+  ta: {
+    translation: taTranslations
+  },
+  te: {
+    translation: teTranslations
+  },
+  kn: {
+    translation: knTranslations
   }
 }
 

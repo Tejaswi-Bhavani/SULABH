@@ -6,7 +6,10 @@ const languages = [
   { code: 'en', name: 'English', nativeName: 'English' },
   { code: 'hi', name: 'Hindi', nativeName: 'हिन्दी' },
   { code: 'bn', name: 'Bengali', nativeName: 'বাংলা' },
-  { code: 'mr', name: 'Marathi', nativeName: 'मराठी' }
+  { code: 'mr', name: 'Marathi', nativeName: 'मराठी' },
+  { code: 'ta', name: 'Tamil', nativeName: 'தமிழ்' },
+  { code: 'te', name: 'Telugu', nativeName: 'తెలుగు' },
+  { code: 'kn', name: 'Kannada', nativeName: 'ಕನ್ನಡ' }
 ]
 
 const LanguageSwitcher: React.FC = () => {

@@ -16,6 +16,7 @@ import SubmitSuggestionPage from './pages/SubmitSuggestionPage'
 import SuggestionsPage from './pages/SuggestionsPage'
 import SuggestionDetailsPage from './pages/SuggestionDetailsPage'
 import NGODashboardPage from './pages/NGODashboardPage'
+import NGOCampaignPage from './pages/NGOCampaignPage'
 import TrackComplaintPage from './pages/TrackComplaintPage'
 import ComplaintDetailsPage from './pages/ComplaintDetailsPage'
 import AdminDashboardPage from './pages/AdminDashboardPage'
@@ -70,6 +71,11 @@ function App() {
                       <Route path="/ngo" element={
                         <ProtectedRoute requiredRole="ngo">
                           <NGODashboardPage />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/ngo/campaign/:id" element={
+                        <ProtectedRoute requiredRole="ngo">
+                          <NGOCampaignPage />
                         </ProtectedRoute>
                       } />
                       <Route path="/reports" element={
