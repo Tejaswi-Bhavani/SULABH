@@ -29,6 +29,7 @@ const RegisterPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [error, setError] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const {
     register,
@@ -41,6 +42,7 @@ const RegisterPage: React.FC = () => {
   const onSubmit = async (data: RegisterFormData) => {
     try {
       setError('')
+      setIsSubmitting(true)
       await registerUser({
         firstName: data.firstName,
         lastName: data.lastName,
@@ -49,8 +51,10 @@ const RegisterPage: React.FC = () => {
         password: data.password
       })
       navigate('/dashboard')
-    } catch (err) {
+    } catch (err: any) {
       setError('Registration failed. Please try again.')
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -248,10 +252,10 @@ const RegisterPage: React.FC = () => {
           <div>
             <button
               type="submit"
-              disabled={loading}
+              disabled={isSubmitting}
               className="w-full btn-primary flex justify-center items-center"
             >
-              {loading ? (
+              {isSubmitting ? (
                 <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
               ) : (
                 t('nav.register')
