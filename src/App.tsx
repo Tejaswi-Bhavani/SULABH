@@ -23,6 +23,7 @@ import AdminDashboardPage from './pages/AdminDashboardPage'
 import AuthorityDashboardPage from './pages/AuthorityDashboardPage'
 import ReportsPage from './pages/ReportsPage'
 import EnhancedReportsPage from './pages/EnhancedReportsPage'
+import UserSettingsPage from './pages/UserSettingsPage'
 import TestSuite from './components/Testing/TestSuite'
 import PerformanceMonitor from './components/Performance/PerformanceMonitor'
 import AccessibilityChecker from './components/Accessibility/AccessibilityChecker'
@@ -56,6 +57,11 @@ function App() {
                       <Route path="/dashboard" element={
                         <ProtectedRoute>
                           <DashboardPage />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/settings" element={
+                        <ProtectedRoute>
+                          <UserSettingsPage />
                         </ProtectedRoute>
                       } />
                       <Route path="/submit-complaint" element={

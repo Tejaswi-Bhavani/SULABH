@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { supabase } from '../lib/supabase'
 import { Complaint, ComplaintContextType } from '../types'
 import { useAuth } from './AuthContext'
+import { getCachedData, setCachedData, invalidateCache, withCache } from '../lib/cacheUtils'
 
 const ComplaintContext = createContext<ComplaintContextType | undefined>(undefined)
 
@@ -36,6 +37,17 @@ export const ComplaintProvider: React.FC<ComplaintProviderProps> = ({ children }
 
     setLoading(true)
     try {
+      // Try to get complaints from cache first
+      const cacheKey = `complaints_list:user=${user.id}:role=${user.role}${user.department ? `:dept=${user.department}` : ''}`
+      const { data: cachedData, cached } = await getCachedData<Complaint[]>(cacheKey, {})
+      
+      if (cached && cachedData) {
+        setComplaints(cachedData)
+        setLoading(false)
+        return
+      }
+      
+      // If not cached, fetch from database
       let query = supabase
         .from('complaints')
         .select(`
@@ -87,6 +99,9 @@ export const ComplaintProvider: React.FC<ComplaintProviderProps> = ({ children }
         }))
       }))
 
+      // Cache the formatted complaints
+      await setCachedData(cacheKey, formattedComplaints, {})
+      
       setComplaints(formattedComplaints)
     } catch (error) {
       console.error('Error loading complaints:', error)
@@ -119,6 +134,9 @@ export const ComplaintProvider: React.FC<ComplaintProviderProps> = ({ children }
 
       if (error) throw error
 
+      // Invalidate complaints cache
+      await invalidateCache(`complaints_list:user=${user.id}:role=${user.role}${user.department ? `:dept=${user.department}` : ''}`, {})
+      
       // Reload complaints to get the updated list
       await loadComplaints()
 
@@ -146,6 +164,11 @@ export const ComplaintProvider: React.FC<ComplaintProviderProps> = ({ children }
 
       if (error) throw error
 
+      // Invalidate complaints cache
+      if (user) {
+        await invalidateCache(`complaints_list:user=${user.id}:role=${user.role}${user.department ? `:dept=${user.department}` : ''}`, {})
+      }
+      
       // Reload complaints to get the updated list
       await loadComplaints()
     } catch (error: any) {
@@ -166,6 +189,15 @@ export const ComplaintProvider: React.FC<ComplaintProviderProps> = ({ children }
   const trackComplaint = async (id: string): Promise<Complaint | null> => {
     setLoading(true)
     try {
+      // Try to get from cache first
+      const cacheKey = `complaint:${id}`
+      const { data: cachedData, cached } = await getCachedData<Complaint>(cacheKey, {})
+      
+      if (cached && cachedData) {
+        return cachedData
+      }
+      
+      // If not cached, fetch from database
       const { data, error } = await supabase
         .from('complaints')
         .select(`
@@ -213,6 +245,9 @@ export const ComplaintProvider: React.FC<ComplaintProviderProps> = ({ children }
         }))
       }
 
+      // Cache the complaint
+      await setCachedData(cacheKey, complaint, {})
+      
       return complaint
     } catch (error: any) {
       throw new Error(error.message || 'Failed to track complaint')

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from './AuthContext'
+import { withCache } from '../lib/cacheUtils'
 
 export interface ReportData {
   // Basic Statistics
@@ -123,148 +124,157 @@ export const ReportsProvider: React.FC<ReportsProviderProps> = ({ children }) =>
   const generateDashboardReport = async (period: 'week' | 'month' | 'quarter' | 'year'): Promise<ReportData> => {
     setLoading(true)
     try {
-      // Calculate date range based on period
-      const now = new Date()
-      const startDate = new Date()
-      
-      switch (period) {
-        case 'week':
-          startDate.setDate(now.getDate() - 7)
-          break
-        case 'month':
-          startDate.setMonth(now.getMonth() - 1)
-          break
-        case 'quarter':
-          startDate.setMonth(now.getMonth() - 3)
-          break
-        case 'year':
-          startDate.setFullYear(now.getFullYear() - 1)
-          break
-      }
+      // Use cache wrapper for dashboard report
+      return await withCache(
+        'dashboard_stats',
+        async () => {
+          // Calculate date range based on period
+          const now = new Date()
+          const startDate = new Date()
+          
+          switch (period) {
+            case 'week':
+              startDate.setDate(now.getDate() - 7)
+              break
+            case 'month':
+              startDate.setMonth(now.getMonth() - 1)
+              break
+            case 'quarter':
+              startDate.setMonth(now.getMonth() - 3)
+              break
+            case 'year':
+              startDate.setFullYear(now.getFullYear() - 1)
+              break
+          }
 
-      // Fetch complaints data
-      let complaintsQuery = supabase
-        .from('complaints')
-        .select(`
-          *,
-          complaint_feedback(rating, comment),
-          profiles!complaints_user_id_fkey(role, department)
-        `)
-        .gte('submitted_at', startDate.toISOString())
+          // Fetch complaints data
+          let complaintsQuery = supabase
+            .from('complaints')
+            .select(`
+              *,
+              complaint_feedback(rating, comment),
+              profiles!complaints_user_id_fkey(role, department)
+            `)
+            .gte('submitted_at', startDate.toISOString())
 
-      // Apply role-based filtering
-      if (user?.role === 'authority' && user.department) {
-        complaintsQuery = complaintsQuery.eq('assigned_department', user.department)
-      }
+          // Apply role-based filtering
+          if (user?.role === 'authority' && user.department) {
+            complaintsQuery = complaintsQuery.eq('assigned_department', user.department)
+          }
 
-      const { data: complaints, error: complaintsError } = await complaintsQuery
+          const { data: complaints, error: complaintsError } = await complaintsQuery
 
-      if (complaintsError) throw complaintsError
+          if (complaintsError) throw complaintsError
 
-      // Fetch users data
-      const { data: users, error: usersError } = await supabase
-        .from('profiles')
-        .select('role, created_at')
-        .gte('created_at', startDate.toISOString())
+          // Fetch users data
+          const { data: users, error: usersError } = await supabase
+            .from('profiles')
+            .select('role, created_at')
+            .gte('created_at', startDate.toISOString())
 
-      if (usersError) throw usersError
+          if (usersError) throw usersError
 
-      // Process data
-      const totalComplaints = complaints?.length || 0
-      const pendingComplaints = complaints?.filter(c => c.status === 'pending').length || 0
-      const inProgressComplaints = complaints?.filter(c => c.status === 'inProgress').length || 0
-      const resolvedComplaints = complaints?.filter(c => c.status === 'resolved').length || 0
-      const escalatedComplaints = complaints?.filter(c => c.status === 'escalated').length || 0
-      const closedComplaints = complaints?.filter(c => c.status === 'closed').length || 0
+          // Process data
+          const totalComplaints = complaints?.length || 0
+          const pendingComplaints = complaints?.filter(c => c.status === 'pending').length || 0
+          const inProgressComplaints = complaints?.filter(c => c.status === 'inProgress').length || 0
+          const resolvedComplaints = complaints?.filter(c => c.status === 'resolved').length || 0
+          const escalatedComplaints = complaints?.filter(c => c.status === 'escalated').length || 0
+          const closedComplaints = complaints?.filter(c => c.status === 'closed').length || 0
 
-      // Calculate resolution metrics
-      const resolvedWithTime = complaints?.filter(c => c.status === 'resolved' && c.resolved_at) || []
-      const averageResolutionTime = resolvedWithTime.length > 0
-        ? resolvedWithTime.reduce((acc, c) => {
-            const submitted = new Date(c.submitted_at)
-            const resolved = new Date(c.resolved_at!)
-            return acc + (resolved.getTime() - submitted.getTime()) / (1000 * 60 * 60 * 24)
-          }, 0) / resolvedWithTime.length
-        : 0
+          // Calculate resolution metrics
+          const resolvedWithTime = complaints?.filter(c => c.status === 'resolved' && c.resolved_at) || []
+          const averageResolutionTime = resolvedWithTime.length > 0
+            ? resolvedWithTime.reduce((acc, c) => {
+                const submitted = new Date(c.submitted_at)
+                const resolved = new Date(c.resolved_at!)
+                return acc + (resolved.getTime() - submitted.getTime()) / (1000 * 60 * 60 * 24)
+              }, 0) / resolvedWithTime.length
+            : 0
 
-      const resolutionRate = totalComplaints > 0 ? (resolvedComplaints / totalComplaints) * 100 : 0
-      const escalationRate = totalComplaints > 0 ? (escalatedComplaints / totalComplaints) * 100 : 0
+          const resolutionRate = totalComplaints > 0 ? (resolvedComplaints / totalComplaints) * 100 : 0
+          const escalationRate = totalComplaints > 0 ? (escalatedComplaints / totalComplaints) * 100 : 0
 
-      // Calculate satisfaction score
-      const feedbacks = complaints?.flatMap(c => c.complaint_feedback || []) || []
-      const satisfactionScore = feedbacks.length > 0
-        ? feedbacks.reduce((acc, f) => acc + f.rating, 0) / feedbacks.length
-        : 0
+          // Calculate satisfaction score
+          const feedbacks = complaints?.flatMap(c => c.complaint_feedback || []) || []
+          const satisfactionScore = feedbacks.length > 0
+            ? feedbacks.reduce((acc, f) => acc + f.rating, 0) / feedbacks.length
+            : 0
 
-      // Category breakdown
-      const complaintsByCategory = complaints?.reduce((acc, c) => {
-        acc[c.category] = (acc[c.category] || 0) + 1
-        return acc
-      }, {} as Record<string, number>) || {}
+          // Category breakdown
+          const complaintsByCategory = complaints?.reduce((acc, c) => {
+            acc[c.category] = (acc[c.category] || 0) + 1
+            return acc
+          }, {} as Record<string, number>) || {}
 
-      // Priority breakdown
-      const complaintsByPriority = complaints?.reduce((acc, c) => {
-        acc[c.priority] = (acc[c.priority] || 0) + 1
-        return acc
-      }, {} as Record<string, number>) || {}
+          // Priority breakdown
+          const complaintsByPriority = complaints?.reduce((acc, c) => {
+            acc[c.priority] = (acc[c.priority] || 0) + 1
+            return acc
+          }, {} as Record<string, number>) || {}
 
-      // Department breakdown
-      const complaintsByDepartment = complaints?.reduce((acc, c) => {
-        if (c.assigned_department) {
-          acc[c.assigned_department] = (acc[c.assigned_department] || 0) + 1
-        }
-        return acc
-      }, {} as Record<string, number>) || {}
+          // Department breakdown
+          const complaintsByDepartment = complaints?.reduce((acc, c) => {
+            if (c.assigned_department) {
+              acc[c.assigned_department] = (acc[c.assigned_department] || 0) + 1
+            }
+            return acc
+          }, {} as Record<string, number>) || {}
 
-      // Generate monthly trends
-      const monthlyTrends = generateTimeTrends(complaints || [], 'month')
-      const weeklyTrends = generateTimeTrends(complaints || [], 'week')
+          // Generate monthly trends
+          const monthlyTrends = generateTimeTrends(complaints || [], 'month')
+          const weeklyTrends = generateTimeTrends(complaints || [], 'week')
 
-      // User analytics
-      const activeUsers = users?.length || 0
-      const newRegistrations = users?.length || 0
-      const usersByRole = users?.reduce((acc, u) => {
-        acc[u.role] = (acc[u.role] || 0) + 1
-        return acc
-      }, {} as Record<string, number>) || {}
+          // User analytics
+          const activeUsers = users?.length || 0
+          const newRegistrations = users?.length || 0
+          const usersByRole = users?.reduce((acc, u) => {
+            acc[u.role] = (acc[u.role] || 0) + 1
+            return acc
+          }, {} as Record<string, number>) || {}
 
-      // Feedback summary
-      const feedbackSummary = {
-        totalFeedbacks: feedbacks.length,
-        averageRating: satisfactionScore,
-        ratingDistribution: feedbacks.reduce((acc, f) => {
-          acc[f.rating] = (acc[f.rating] || 0) + 1
-          return acc
-        }, {} as Record<number, number>)
-      }
+          // Feedback summary
+          const feedbackSummary = {
+            totalFeedbacks: feedbacks.length,
+            averageRating: satisfactionScore,
+            ratingDistribution: feedbacks.reduce((acc, f) => {
+              acc[f.rating] = (acc[f.rating] || 0) + 1
+              return acc
+            }, {} as Record<number, number>)
+          }
 
-      // Department performance (for admin users)
-      const departmentPerformance = user?.role === 'admin' 
-        ? generateDepartmentPerformance(complaints || [])
-        : []
+          // Department performance (for admin users)
+          const departmentPerformance = user?.role === 'admin' 
+            ? generateDepartmentPerformance(complaints || [])
+            : []
 
-      return {
-        totalComplaints,
-        pendingComplaints,
-        inProgressComplaints,
-        resolvedComplaints,
-        escalatedComplaints,
-        closedComplaints,
-        averageResolutionTime,
-        resolutionRate,
-        escalationRate,
-        satisfactionScore,
-        complaintsByCategory,
-        complaintsByPriority,
-        complaintsByDepartment,
-        monthlyTrends,
-        weeklyTrends,
-        activeUsers,
-        newRegistrations,
-        usersByRole,
-        feedbackSummary,
-        departmentPerformance
-      }
+          return {
+            totalComplaints,
+            pendingComplaints,
+            inProgressComplaints,
+            resolvedComplaints,
+            escalatedComplaints,
+            closedComplaints,
+            averageResolutionTime,
+            resolutionRate,
+            escalationRate,
+            satisfactionScore,
+            complaintsByCategory,
+            complaintsByPriority,
+            complaintsByDepartment,
+            monthlyTrends,
+            weeklyTrends,
+            activeUsers,
+            newRegistrations,
+            usersByRole,
+            feedbackSummary,
+            departmentPerformance
+          }
+        },
+        { period },
+        user?.id,
+        user?.department
+      )
     } catch (error) {
       console.error('Error generating dashboard report:', error)
       throw error
@@ -276,50 +286,59 @@ export const ReportsProvider: React.FC<ReportsProviderProps> = ({ children }) =>
   const generateEscalationReport = async (department?: string): Promise<EscalationReport[]> => {
     setLoading(true)
     try {
-      let query = supabase
-        .from('complaints')
-        .select('*')
-        .in('status', ['pending', 'escalated'])
-        .order('submitted_at', { ascending: true })
+      // Use cache wrapper for escalation report
+      return await withCache(
+        'escalation_report',
+        async () => {
+          let query = supabase
+            .from('complaints')
+            .select('*')
+            .in('status', ['pending', 'escalated'])
+            .order('submitted_at', { ascending: true })
 
-      if (department) {
-        query = query.eq('assigned_department', department)
-      } else if (user?.role === 'authority' && user.department) {
-        query = query.eq('assigned_department', user.department)
-      }
+          if (department) {
+            query = query.eq('assigned_department', department)
+          } else if (user?.role === 'authority' && user.department) {
+            query = query.eq('assigned_department', user.department)
+          }
 
-      const { data: complaints, error } = await query
+          const { data: complaints, error } = await query
 
-      if (error) throw error
+          if (error) throw error
 
-      const escalationReports: EscalationReport[] = complaints?.map(complaint => {
-        const submittedDate = new Date(complaint.submitted_at)
-        const daysPending = Math.floor((Date.now() - submittedDate.getTime()) / (1000 * 60 * 60 * 24))
-        
-        let escalationReason = ''
-        if (daysPending > 7 && complaint.priority === 'urgent') {
-          escalationReason = 'Urgent complaint pending for more than 7 days'
-        } else if (daysPending > 14 && complaint.priority === 'high') {
-          escalationReason = 'High priority complaint pending for more than 14 days'
-        } else if (daysPending > 30) {
-          escalationReason = 'Complaint pending for more than 30 days'
-        } else if (complaint.status === 'escalated') {
-          escalationReason = 'Manually escalated'
-        }
+          const escalationReports: EscalationReport[] = complaints?.map(complaint => {
+            const submittedDate = new Date(complaint.submitted_at)
+            const daysPending = Math.floor((Date.now() - submittedDate.getTime()) / (1000 * 60 * 60 * 24))
+            
+            let escalationReason = ''
+            if (daysPending > 7 && complaint.priority === 'urgent') {
+              escalationReason = 'Urgent complaint pending for more than 7 days'
+            } else if (daysPending > 14 && complaint.priority === 'high') {
+              escalationReason = 'High priority complaint pending for more than 14 days'
+            } else if (daysPending > 30) {
+              escalationReason = 'Complaint pending for more than 30 days'
+            } else if (complaint.status === 'escalated') {
+              escalationReason = 'Manually escalated'
+            }
 
-        return {
-          complaintId: complaint.id,
-          subject: complaint.subject,
-          category: complaint.category,
-          priority: complaint.priority,
-          submittedAt: complaint.submitted_at,
-          daysPending,
-          assignedDepartment: complaint.assigned_department || 'Unassigned',
-          escalationReason
-        }
-      }).filter(report => report.escalationReason) || []
+            return {
+              complaintId: complaint.id,
+              subject: complaint.subject,
+              category: complaint.category,
+              priority: complaint.priority,
+              submittedAt: complaint.submitted_at,
+              daysPending,
+              assignedDepartment: complaint.assigned_department || 'Unassigned',
+              escalationReason
+            }
+          }).filter(report => report.escalationReason) || []
 
-      return escalationReports
+          return escalationReports
+        },
+        { department },
+        user?.id,
+        user?.department
+      )
     } catch (error) {
       console.error('Error generating escalation report:', error)
       throw error
@@ -337,67 +356,76 @@ export const ReportsProvider: React.FC<ReportsProviderProps> = ({ children }) =>
   }): Promise<ComplaintReport[]> => {
     setLoading(true)
     try {
-      let query = supabase
-        .from('complaints')
-        .select(`
-          *,
-          complaint_feedback(rating, comment)
-        `)
-        .order('submitted_at', { ascending: false })
+      // Use cache wrapper for complaint report
+      return await withCache(
+        'complaints_report',
+        async () => {
+          let query = supabase
+            .from('complaints')
+            .select(`
+              *,
+              complaint_feedback(rating, comment)
+            `)
+            .order('submitted_at', { ascending: false })
 
-      // Apply filters
-      if (filters.startDate) {
-        query = query.gte('submitted_at', filters.startDate)
-      }
-      if (filters.endDate) {
-        query = query.lte('submitted_at', filters.endDate)
-      }
-      if (filters.category) {
-        query = query.eq('category', filters.category)
-      }
-      if (filters.department) {
-        query = query.eq('assigned_department', filters.department)
-      }
-      if (filters.status) {
-        query = query.eq('status', filters.status)
-      }
+          // Apply filters
+          if (filters.startDate) {
+            query = query.gte('submitted_at', filters.startDate)
+          }
+          if (filters.endDate) {
+            query = query.lte('submitted_at', filters.endDate)
+          }
+          if (filters.category) {
+            query = query.eq('category', filters.category)
+          }
+          if (filters.department) {
+            query = query.eq('assigned_department', filters.department)
+          }
+          if (filters.status) {
+            query = query.eq('status', filters.status)
+          }
 
-      // Apply role-based filtering
-      if (user?.role === 'authority' && user.department) {
-        query = query.eq('assigned_department', user.department)
-      } else if (user?.role === 'citizen') {
-        query = query.eq('user_id', user.id)
-      }
+          // Apply role-based filtering
+          if (user?.role === 'authority' && user.department) {
+            query = query.eq('assigned_department', user.department)
+          } else if (user?.role === 'citizen') {
+            query = query.eq('user_id', user.id)
+          }
 
-      const { data: complaints, error } = await query
+          const { data: complaints, error } = await query
 
-      if (error) throw error
+          if (error) throw error
 
-      const complaintReports: ComplaintReport[] = complaints?.map(complaint => {
-        const submittedAt = new Date(complaint.submitted_at)
-        const resolvedAt = complaint.resolved_at ? new Date(complaint.resolved_at) : undefined
-        const resolutionTime = resolvedAt 
-          ? Math.floor((resolvedAt.getTime() - submittedAt.getTime()) / (1000 * 60 * 60 * 24))
-          : undefined
+          const complaintReports: ComplaintReport[] = complaints?.map(complaint => {
+            const submittedAt = new Date(complaint.submitted_at)
+            const resolvedAt = complaint.resolved_at ? new Date(complaint.resolved_at) : undefined
+            const resolutionTime = resolvedAt 
+              ? Math.floor((resolvedAt.getTime() - submittedAt.getTime()) / (1000 * 60 * 60 * 24))
+              : undefined
 
-        return {
-          id: complaint.id,
-          subject: complaint.subject,
-          category: complaint.category,
-          priority: complaint.priority,
-          status: complaint.status,
-          submittedAt: complaint.submitted_at,
-          resolvedAt: complaint.resolved_at || undefined,
-          resolutionTime,
-          assignedDepartment: complaint.assigned_department || 'Unassigned',
-          userFeedback: complaint.complaint_feedback?.[0] ? {
-            rating: complaint.complaint_feedback[0].rating,
-            comment: complaint.complaint_feedback[0].comment || undefined
-          } : undefined
-        }
-      }) || []
+            return {
+              id: complaint.id,
+              subject: complaint.subject,
+              category: complaint.category,
+              priority: complaint.priority,
+              status: complaint.status,
+              submittedAt: complaint.submitted_at,
+              resolvedAt: complaint.resolved_at || undefined,
+              resolutionTime,
+              assignedDepartment: complaint.assigned_department || 'Unassigned',
+              userFeedback: complaint.complaint_feedback?.[0] ? {
+                rating: complaint.complaint_feedback[0].rating,
+                comment: complaint.complaint_feedback[0].comment || undefined
+              } : undefined
+            }
+          }) || []
 
-      return complaintReports
+          return complaintReports
+        },
+        filters,
+        user?.id,
+        user?.department
+      )
     } catch (error) {
       console.error('Error generating complaint report:', error)
       throw error
@@ -409,45 +437,54 @@ export const ReportsProvider: React.FC<ReportsProviderProps> = ({ children }) =>
   const generateFeedbackSummary = async (department?: string) => {
     setLoading(true)
     try {
-      let query = supabase
-        .from('complaint_feedback')
-        .select(`
-          *,
-          complaints!inner(assigned_department, category, priority)
-        `)
+      // Use cache wrapper for feedback summary
+      return await withCache(
+        'feedback_summary',
+        async () => {
+          let query = supabase
+            .from('complaint_feedback')
+            .select(`
+              *,
+              complaints!inner(assigned_department, category, priority)
+            `)
 
-      if (department) {
-        query = query.eq('complaints.assigned_department', department)
-      } else if (user?.role === 'authority' && user.department) {
-        query = query.eq('complaints.assigned_department', user.department)
-      }
-
-      const { data: feedbacks, error } = await query
-
-      if (error) throw error
-
-      // Process feedback data
-      const summary = {
-        totalFeedbacks: feedbacks?.length || 0,
-        averageRating: feedbacks?.length ? 
-          feedbacks.reduce((acc, f) => acc + f.rating, 0) / feedbacks.length : 0,
-        ratingDistribution: feedbacks?.reduce((acc, f) => {
-          acc[f.rating] = (acc[f.rating] || 0) + 1
-          return acc
-        }, {} as Record<number, number>) || {},
-        feedbackByCategory: feedbacks?.reduce((acc, f) => {
-          const category = f.complaints.category
-          if (!acc[category]) {
-            acc[category] = { total: 0, averageRating: 0, ratings: [] }
+          if (department) {
+            query = query.eq('complaints.assigned_department', department)
+          } else if (user?.role === 'authority' && user.department) {
+            query = query.eq('complaints.assigned_department', user.department)
           }
-          acc[category].total++
-          acc[category].ratings.push(f.rating)
-          acc[category].averageRating = acc[category].ratings.reduce((a, b) => a + b, 0) / acc[category].ratings.length
-          return acc
-        }, {} as Record<string, any>) || {}
-      }
 
-      return summary
+          const { data: feedbacks, error } = await query
+
+          if (error) throw error
+
+          // Process feedback data
+          const summary = {
+            totalFeedbacks: feedbacks?.length || 0,
+            averageRating: feedbacks?.length ? 
+              feedbacks.reduce((acc, f) => acc + f.rating, 0) / feedbacks.length : 0,
+            ratingDistribution: feedbacks?.reduce((acc, f) => {
+              acc[f.rating] = (acc[f.rating] || 0) + 1
+              return acc
+            }, {} as Record<number, number>) || {},
+            feedbackByCategory: feedbacks?.reduce((acc, f) => {
+              const category = f.complaints.category
+              if (!acc[category]) {
+                acc[category] = { total: 0, averageRating: 0, ratings: [] }
+              }
+              acc[category].total++
+              acc[category].ratings.push(f.rating)
+              acc[category].averageRating = acc[category].ratings.reduce((a, b) => a + b, 0) / acc[category].ratings.length
+              return acc
+            }, {} as Record<string, any>) || {}
+          }
+
+          return summary
+        },
+        { department },
+        user?.id,
+        user?.department
+      )
     } catch (error) {
       console.error('Error generating feedback summary:', error)
       throw error
@@ -459,30 +496,39 @@ export const ReportsProvider: React.FC<ReportsProviderProps> = ({ children }) =>
   const generateUserActivityReport = async () => {
     setLoading(true)
     try {
-      const { data: users, error } = await supabase
-        .from('profiles')
-        .select('role, created_at, department')
-        .order('created_at', { ascending: false })
+      // Use cache wrapper for user activity report
+      return await withCache(
+        'user_activity',
+        async () => {
+          const { data: users, error } = await supabase
+            .from('profiles')
+            .select('role, created_at, department')
+            .order('created_at', { ascending: false })
 
-      if (error) throw error
+          if (error) throw error
 
-      const now = new Date()
-      const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate())
+          const now = new Date()
+          const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate())
 
-      const report = {
-        totalUsers: users?.length || 0,
-        newUsersThisMonth: users?.filter(u => new Date(u.created_at) >= lastMonth).length || 0,
-        usersByRole: users?.reduce((acc, u) => {
-          acc[u.role] = (acc[u.role] || 0) + 1
-          return acc
-        }, {} as Record<string, number>) || {},
-        usersByDepartment: users?.filter(u => u.department).reduce((acc, u) => {
-          acc[u.department!] = (acc[u.department!] || 0) + 1
-          return acc
-        }, {} as Record<string, number>) || {}
-      }
+          const report = {
+            totalUsers: users?.length || 0,
+            newUsersThisMonth: users?.filter(u => new Date(u.created_at) >= lastMonth).length || 0,
+            usersByRole: users?.reduce((acc, u) => {
+              acc[u.role] = (acc[u.role] || 0) + 1
+              return acc
+            }, {} as Record<string, number>) || {},
+            usersByDepartment: users?.filter(u => u.department).reduce((acc, u) => {
+              acc[u.department!] = (acc[u.department!] || 0) + 1
+              return acc
+            }, {} as Record<string, number>) || {}
+          }
 
-      return report
+          return report
+        },
+        {},
+        user?.id,
+        user?.role === 'admin' ? undefined : user?.department
+      )
     } catch (error) {
       console.error('Error generating user activity report:', error)
       throw error

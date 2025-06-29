@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Menu, X, User, LogOut, Globe, BarChart3 } from 'lucide-react'
+import { Menu, X, User, LogOut, Globe, BarChart3, Settings } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import LanguageSwitcher from '../Common/LanguageSwitcher'
 import NotificationBell from '../Common/NotificationBell'
@@ -116,11 +116,12 @@ const Header: React.FC = () => {
                       <p className="text-xs text-gray-500 capitalize">{user.role}</p>
                     </div>
                     <Link
-                      to="/profile"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-200"
+                      to="/settings"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-200 flex items-center space-x-2"
                       onClick={() => setIsUserMenuOpen(false)}
                     >
-                      {t('nav.profile')}
+                      <Settings className="w-4 h-4" />
+                      <span>Settings</span>
                     </Link>
                     <button
                       onClick={handleLogout}

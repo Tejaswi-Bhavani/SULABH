@@ -12,7 +12,7 @@ import {
   Mic
 } from 'lucide-react'
 import { useComplaints } from '../contexts/ComplaintContext'
-import { useNotifications, emailTemplates } from '../contexts/NotificationContext'
+import { useNotifications, emailTemplates, smsTemplates } from '../contexts/NotificationContext'
 import { useAuth } from '../contexts/AuthContext'
 import { ComplaintCategory, Priority } from '../types'
 import FileUpload from '../components/Common/FileUpload'
@@ -24,7 +24,8 @@ const complaintSchema = z.object({
   subject: z.string().min(10, 'Subject must be at least 10 characters'),
   description: z.string().min(50, 'Description must be at least 50 characters'),
   location: z.string().min(5, 'Location must be at least 5 characters'),
-  priority: z.enum(['low', 'medium', 'high', 'urgent'])
+  priority: z.enum(['low', 'medium', 'high', 'urgent']),
+  sendSmsNotification: z.boolean().optional()
 })
 
 type ComplaintFormData = z.infer<typeof complaintSchema>
@@ -33,7 +34,7 @@ const SubmitComplaintPage: React.FC = () => {
   const { t, i18n } = useTranslation()
   const { user } = useAuth()
   const { submitComplaint, loading } = useComplaints()
-  const { sendNotification, sendEmailNotification } = useNotifications()
+  const { sendNotification, sendEmailNotification, sendSMSNotification } = useNotifications()
   const navigate = useNavigate()
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
@@ -50,11 +51,13 @@ const SubmitComplaintPage: React.FC = () => {
   } = useForm<ComplaintFormData>({
     resolver: zodResolver(complaintSchema),
     defaultValues: {
-      priority: 'medium'
+      priority: 'medium',
+      sendSmsNotification: false
     }
   })
 
   const currentDescription = watch('description')
+  const sendSmsNotification = watch('sendSmsNotification')
 
   const categories: { value: ComplaintCategory; label: string }[] = [
     { value: 'sanitation', label: t('complaint.submit.categories.sanitation') },
@@ -128,6 +131,16 @@ const SubmitComplaintPage: React.FC = () => {
         htmlContent,
         textContent
       }, emailData)
+
+      // Send SMS notification if enabled and phone number is available
+      if (sendSmsNotification && user.phone) {
+        const smsTemplate = smsTemplates.complaintSubmitted
+        await sendSMSNotification(user.phone, smsTemplate, {
+          complaintId,
+          subject: data.subject,
+          userId: user.id
+        })
+      }
 
       setSuccess(`Complaint submitted successfully! Your complaint ID is: ${complaintId}`)
       toast.success('Complaint submitted successfully!')
@@ -308,6 +321,21 @@ const SubmitComplaintPage: React.FC = () => {
                 acceptedTypes={['image/*', 'video/*', '.pdf', '.doc', '.docx']}
               />
             </div>
+
+            {/* SMS Notification Option */}
+            {user?.phone && (
+              <div className="flex items-center">
+                <input
+                  {...register('sendSmsNotification')}
+                  type="checkbox"
+                  id="sendSmsNotification"
+                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                />
+                <label htmlFor="sendSmsNotification" className="ml-2 block text-sm text-gray-700">
+                  Receive SMS notifications about this complaint
+                </label>
+              </div>
+            )}
 
             {/* Submit Button */}
             <div className="flex items-center justify-between pt-6 border-t border-gray-200">

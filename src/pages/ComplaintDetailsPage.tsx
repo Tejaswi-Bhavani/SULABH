@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { 
@@ -10,18 +10,61 @@ import {
   CheckCircle,
   AlertTriangle,
   FileText,
-  Star
+  Star,
+  Phone
 } from 'lucide-react'
 import { useComplaints } from '../contexts/ComplaintContext'
+import { useAuth } from '../contexts/AuthContext'
 import { format } from 'date-fns'
+import ComplaintUpdateForm from '../components/Complaints/ComplaintUpdateForm'
 
 const ComplaintDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>()
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const { getComplaint } = useComplaints()
+  const { getComplaint, trackComplaint } = useComplaints()
+  const { user } = useAuth()
+  const [loading, setLoading] = useState(true)
+  const [complaint, setComplaint] = useState<any>(null)
+  const [showUpdateForm, setShowUpdateForm] = useState(false)
 
-  const complaint = id ? getComplaint(id) : null
+  useEffect(() => {
+    if (id) {
+      loadComplaint()
+    }
+  }, [id])
+
+  const loadComplaint = async () => {
+    setLoading(true)
+    try {
+      // First try to get from context
+      let complaintData = id ? getComplaint(id) : null
+      
+      // If not found in context, fetch from API
+      if (!complaintData && id) {
+        complaintData = await trackComplaint(id)
+      }
+      
+      setComplaint(complaintData)
+    } catch (error) {
+      console.error('Error loading complaint:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleUpdateAdded = () => {
+    setShowUpdateForm(false)
+    loadComplaint()
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+      </div>
+    )
+  }
 
   if (!complaint) {
     return (
@@ -75,6 +118,15 @@ const ComplaintDetailsPage: React.FC = () => {
     }
   }
 
+  // Check if user is authorized to add updates (authority or admin)
+  const canAddUpdates = user && (
+    user.role === 'authority' || 
+    user.role === 'admin' || 
+    (complaint.assignedDepartment && user.department === complaint.assignedDepartment)
+  )
+
+  const StatusIcon = getStatusIcon(complaint.status)
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -99,7 +151,7 @@ const ComplaintDetailsPage: React.FC = () => {
             </div>
             <div className="flex items-center space-x-3">
               <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(complaint.status)}`}>
-                {React.createElement(getStatusIcon(complaint.status), { className: "w-4 h-4 mr-1" })}
+                <StatusIcon className="w-4 h-4 mr-1" />
                 {t(`complaint.status.${complaint.status}`)}
               </span>
               <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getPriorityColor(complaint.priority)}`}>
@@ -141,10 +193,17 @@ const ComplaintDetailsPage: React.FC = () => {
                   <div>
                     <h3 className="text-sm font-medium text-gray-700 mb-2">Attachments</h3>
                     <div className="space-y-2">
-                      {complaint.attachments.map((attachment, index) => (
+                      {complaint.attachments.map((attachment: string, index: number) => (
                         <div key={index} className="flex items-center space-x-2 text-sm text-gray-600">
                           <FileText className="w-4 h-4" />
-                          <span>{attachment}</span>
+                          <a 
+                            href={attachment} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-primary-600 hover:text-primary-700 hover:underline"
+                          >
+                            {attachment.split('/').pop()}
+                          </a>
                         </div>
                       ))}
                     </div>
@@ -157,7 +216,7 @@ const ComplaintDetailsPage: React.FC = () => {
             <div className="card">
               <h2 className="text-xl font-semibold text-gray-900 mb-4">Status Timeline</h2>
               <div className="space-y-6">
-                {complaint.updates.map((update, index) => {
+                {complaint.updates.map((update: any, index: number) => {
                   const StatusIcon = getStatusIcon(update.status)
                   const isLast = index === complaint.updates.length - 1
                   
@@ -182,6 +241,24 @@ const ComplaintDetailsPage: React.FC = () => {
                           <p className="text-sm text-gray-600">
                             Updated by: {update.updatedBy}
                           </p>
+                          
+                          {/* Show attachments if any */}
+                          {update.attachments && update.attachments.length > 0 && (
+                            <div className="mt-2 space-y-1">
+                              {update.attachments.map((attachment: string, idx: number) => (
+                                <a 
+                                  key={idx}
+                                  href={attachment}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-xs text-primary-600 hover:text-primary-700 hover:underline flex items-center space-x-1"
+                                >
+                                  <FileText className="w-3 h-3" />
+                                  <span>{attachment.split('/').pop()}</span>
+                                </a>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -189,6 +266,28 @@ const ComplaintDetailsPage: React.FC = () => {
                 })}
               </div>
             </div>
+
+            {/* Add Update Form for Authorities */}
+            {canAddUpdates && (
+              <div>
+                {showUpdateForm ? (
+                  <ComplaintUpdateForm 
+                    complaintId={complaint.id}
+                    currentStatus={complaint.status}
+                    userId={complaint.userId}
+                    subject={complaint.subject}
+                    onUpdateAdded={handleUpdateAdded}
+                  />
+                ) : (
+                  <button
+                    onClick={() => setShowUpdateForm(true)}
+                    className="btn-primary w-full"
+                  >
+                    Add Update
+                  </button>
+                )}
+              </div>
+            )}
 
             {/* Feedback Section */}
             {complaint.status === 'resolved' && complaint.feedback && (
@@ -274,6 +373,39 @@ const ComplaintDetailsPage: React.FC = () => {
                     <p className="text-sm text-gray-600">Department</p>
                     <p className="font-medium text-gray-900">{complaint.assignedDepartment}</p>
                   </div>
+                )}
+              </div>
+            </div>
+
+            {/* SMS Notifications */}
+            <div className="card bg-secondary-50 border-secondary-200">
+              <h3 className="text-lg font-medium text-secondary-900 mb-2">SMS Updates</h3>
+              <p className="text-secondary-700 text-sm mb-4">
+                Receive SMS notifications about this complaint's status updates.
+              </p>
+              <div className="flex items-center space-x-3">
+                <Phone className="w-5 h-5 text-secondary-600" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-secondary-900">
+                    SMS Notifications
+                  </p>
+                  <p className="text-xs text-secondary-700">
+                    {user?.phone 
+                      ? "You'll receive SMS updates for this complaint" 
+                      : "Add a phone number in settings to enable SMS notifications"}
+                  </p>
+                </div>
+                {user?.phone ? (
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-success-100 text-success-800">
+                    Enabled
+                  </span>
+                ) : (
+                  <button 
+                    onClick={() => navigate('/settings')}
+                    className="text-xs text-secondary-700 underline"
+                  >
+                    Enable
+                  </button>
                 )}
               </div>
             </div>

@@ -21,11 +21,17 @@ export interface EmailTemplate {
   textContent: string
 }
 
+export interface SMSTemplate {
+  type: string
+  content: string
+}
+
 interface NotificationContextType {
   notifications: Notification[]
   unreadCount: number
   sendNotification: (userId: string, type: string, title: string, message: string, relatedId?: string) => Promise<void>
   sendEmailNotification: (email: string, template: EmailTemplate, data: any) => Promise<void>
+  sendSMSNotification: (phone: string, template: SMSTemplate, data: any) => Promise<void>
   markAsRead: (notificationId: string) => Promise<void>
   markAllAsRead: () => Promise<void>
   deleteNotification: (notificationId: string) => Promise<void>
@@ -185,6 +191,36 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     }
   }
 
+  const sendSMSNotification = async (
+    phone: string,
+    template: SMSTemplate,
+    data: any
+  ): Promise<void> => {
+    try {
+      // Replace template variables
+      let messageContent = template.content
+      Object.entries(data).forEach(([key, value]) => {
+        const placeholder = `{{${key}}}`
+        messageContent = messageContent.replace(new RegExp(placeholder, 'g'), String(value))
+      })
+
+      // Call Supabase Edge Function for SMS sending
+      const { error } = await supabase.functions.invoke('send-sms', {
+        body: {
+          to: phone,
+          body: messageContent,
+          complaintId: data.complaintId,
+          userId: data.userId
+        }
+      })
+
+      if (error) throw error
+    } catch (error: any) {
+      console.error('Error sending SMS:', error)
+      throw new Error(error.message || 'Failed to send SMS')
+    }
+  }
+
   const markAsRead = async (notificationId: string): Promise<void> => {
     try {
       const { error } = await supabase
@@ -251,6 +287,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     unreadCount,
     sendNotification,
     sendEmailNotification,
+    sendSMSNotification,
     markAsRead,
     markAllAsRead,
     deleteNotification,
@@ -469,5 +506,28 @@ export const emailTemplates = {
       
       Thank you for using SULABH and helping us improve our services.
     `
+  }
+}
+
+// SMS Templates
+export const smsTemplates = {
+  complaintSubmitted: {
+    type: 'complaint_submitted',
+    content: 'SULABH: Your complaint (ID: {{complaintId}}) has been submitted successfully. Track status at sulabh.gov.in/track'
+  },
+  
+  statusUpdate: {
+    type: 'status_update',
+    content: 'SULABH: Your complaint (ID: {{complaintId}}) status is now {{status}}. {{message}}'
+  },
+  
+  complaintResolved: {
+    type: 'complaint_resolved',
+    content: 'SULABH: Good news! Your complaint (ID: {{complaintId}}) has been resolved. Please login to provide feedback.'
+  },
+  
+  complaintEscalated: {
+    type: 'complaint_escalated',
+    content: 'SULABH: Your complaint (ID: {{complaintId}}) has been escalated for priority attention. We will update you soon.'
   }
 }
