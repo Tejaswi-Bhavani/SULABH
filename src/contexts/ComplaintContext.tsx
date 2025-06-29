@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react'
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { supabase } from '../lib/supabase'
 import { Complaint, ComplaintContextType } from '../types'
 import { useAuth } from './AuthContext'
 
@@ -16,105 +17,114 @@ interface ComplaintProviderProps {
   children: ReactNode
 }
 
-// Mock data for demonstration
-const mockComplaints: Complaint[] = [
-  {
-    id: 'CMP001',
-    userId: '1',
-    category: 'sanitation',
-    subject: 'Garbage not collected for 3 days',
-    description: 'The garbage in our area has not been collected for the past 3 days. It is causing health issues and bad smell.',
-    location: 'Sector 15, Noida',
-    priority: 'high',
-    status: 'inProgress',
-    assignedTo: 'Municipal Worker #123',
-    assignedDepartment: 'Sanitation Department',
-    submittedAt: new Date('2024-01-15'),
-    updatedAt: new Date('2024-01-16'),
-    updates: [
-      {
-        id: 'UPD001',
-        complaintId: 'CMP001',
-        message: 'Complaint received and assigned to sanitation team',
-        status: 'inProgress',
-        updatedBy: 'System',
-        updatedAt: new Date('2024-01-15')
-      }
-    ]
-  },
-  {
-    id: 'CMP002',
-    userId: '1',
-    category: 'infrastructure',
-    subject: 'Pothole on main road',
-    description: 'Large pothole on the main road causing traffic issues and vehicle damage.',
-    location: 'MG Road, Bangalore',
-    priority: 'medium',
-    status: 'resolved',
-    assignedTo: 'Road Maintenance Team',
-    assignedDepartment: 'Public Works',
-    submittedAt: new Date('2024-01-10'),
-    updatedAt: new Date('2024-01-14'),
-    resolvedAt: new Date('2024-01-14'),
-    feedback: {
-      rating: 4,
-      comment: 'Good work, fixed quickly',
-      submittedAt: new Date('2024-01-14')
-    },
-    updates: [
-      {
-        id: 'UPD002',
-        complaintId: 'CMP002',
-        message: 'Complaint received and assigned to road maintenance team',
-        status: 'inProgress',
-        updatedBy: 'System',
-        updatedAt: new Date('2024-01-10')
-      },
-      {
-        id: 'UPD003',
-        complaintId: 'CMP002',
-        message: 'Pothole has been filled and road repaired',
-        status: 'resolved',
-        updatedBy: 'Road Maintenance Team',
-        updatedAt: new Date('2024-01-14')
-      }
-    ]
-  }
-]
-
 export const ComplaintProvider: React.FC<ComplaintProviderProps> = ({ children }) => {
-  const [complaints, setComplaints] = useState<Complaint[]>(mockComplaints)
+  const [complaints, setComplaints] = useState<Complaint[]>([])
   const [loading, setLoading] = useState(false)
   const { user } = useAuth()
 
-  const submitComplaint = async (complaintData: Omit<Complaint, 'id' | 'userId' | 'submittedAt' | 'updatedAt' | 'updates'>): Promise<string> => {
+  // Load complaints when user changes
+  useEffect(() => {
+    if (user) {
+      loadComplaints()
+    } else {
+      setComplaints([])
+    }
+  }, [user])
+
+  const loadComplaints = async () => {
+    if (!user) return
+
     setLoading(true)
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      const newComplaint: Complaint = {
-        ...complaintData,
-        id: `CMP${String(complaints.length + 1).padStart(3, '0')}`,
-        userId: user?.id || '',
-        submittedAt: new Date(),
-        updatedAt: new Date(),
-        updates: [
-          {
-            id: `UPD${Date.now()}`,
-            complaintId: `CMP${String(complaints.length + 1).padStart(3, '0')}`,
-            message: 'Complaint submitted successfully',
-            status: complaintData.status,
-            updatedBy: 'System',
-            updatedAt: new Date()
-          }
-        ]
+      let query = supabase
+        .from('complaints')
+        .select(`
+          *,
+          complaint_updates(*),
+          complaint_feedback(*)
+        `)
+        .order('submitted_at', { ascending: false })
+
+      // Filter based on user role
+      if (user.role === 'citizen') {
+        query = query.eq('user_id', user.id)
+      } else if (user.role === 'authority' && user.department) {
+        query = query.eq('assigned_department', user.department)
       }
-      
-      setComplaints(prev => [...prev, newComplaint])
-      return newComplaint.id
+      // Admin can see all complaints (no additional filter)
+
+      const { data, error } = await query
+
+      if (error) throw error
+
+      const formattedComplaints: Complaint[] = data.map(complaint => ({
+        id: complaint.id,
+        userId: complaint.user_id,
+        category: complaint.category,
+        subject: complaint.subject,
+        description: complaint.description,
+        location: complaint.location,
+        priority: complaint.priority,
+        status: complaint.status,
+        attachments: complaint.attachments || undefined,
+        assignedTo: complaint.assigned_to || undefined,
+        assignedDepartment: complaint.assigned_department || undefined,
+        submittedAt: new Date(complaint.submitted_at),
+        updatedAt: new Date(complaint.updated_at),
+        resolvedAt: complaint.resolved_at ? new Date(complaint.resolved_at) : undefined,
+        feedback: complaint.complaint_feedback?.[0] ? {
+          rating: complaint.complaint_feedback[0].rating,
+          comment: complaint.complaint_feedback[0].comment || undefined,
+          submittedAt: new Date(complaint.complaint_feedback[0].submitted_at)
+        } : undefined,
+        updates: complaint.complaint_updates.map(update => ({
+          id: update.id,
+          complaintId: update.complaint_id,
+          message: update.message,
+          status: update.status,
+          updatedBy: update.updated_by,
+          updatedAt: new Date(update.updated_at)
+        }))
+      }))
+
+      setComplaints(formattedComplaints)
     } catch (error) {
-      throw new Error('Failed to submit complaint')
+      console.error('Error loading complaints:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const submitComplaint = async (complaintData: Omit<Complaint, 'id' | 'userId' | 'submittedAt' | 'updatedAt' | 'updates'>): Promise<string> => {
+    if (!user) throw new Error('User not authenticated')
+
+    setLoading(true)
+    try {
+      const { data, error } = await supabase
+        .from('complaints')
+        .insert({
+          user_id: user.id,
+          category: complaintData.category,
+          subject: complaintData.subject,
+          description: complaintData.description,
+          location: complaintData.location,
+          priority: complaintData.priority,
+          status: complaintData.status,
+          attachments: complaintData.attachments || null,
+          assigned_to: complaintData.assignedTo || null,
+          assigned_department: complaintData.assignedDepartment || null
+        })
+        .select()
+        .single()
+
+      if (error) throw error
+
+      // Reload complaints to get the updated list
+      await loadComplaints()
+
+      return data.id
+    } catch (error: any) {
+      throw new Error(error.message || 'Failed to submit complaint')
     } finally {
       setLoading(false)
     }
@@ -123,16 +133,23 @@ export const ComplaintProvider: React.FC<ComplaintProviderProps> = ({ children }
   const updateComplaint = async (id: string, updates: Partial<Complaint>): Promise<void> => {
     setLoading(true)
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500))
+      const updateData: any = {}
       
-      setComplaints(prev => prev.map(complaint => 
-        complaint.id === id 
-          ? { ...complaint, ...updates, updatedAt: new Date() }
-          : complaint
-      ))
-    } catch (error) {
-      throw new Error('Failed to update complaint')
+      if (updates.status) updateData.status = updates.status
+      if (updates.assignedTo) updateData.assigned_to = updates.assignedTo
+      if (updates.assignedDepartment) updateData.assigned_department = updates.assignedDepartment
+
+      const { error } = await supabase
+        .from('complaints')
+        .update(updateData)
+        .eq('id', id)
+
+      if (error) throw error
+
+      // Reload complaints to get the updated list
+      await loadComplaints()
+    } catch (error: any) {
+      throw new Error(error.message || 'Failed to update complaint')
     } finally {
       setLoading(false)
     }
@@ -149,13 +166,56 @@ export const ComplaintProvider: React.FC<ComplaintProviderProps> = ({ children }
   const trackComplaint = async (id: string): Promise<Complaint | null> => {
     setLoading(true)
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500))
-      
-      const complaint = complaints.find(c => c.id === id)
-      return complaint || null
-    } catch (error) {
-      throw new Error('Failed to track complaint')
+      const { data, error } = await supabase
+        .from('complaints')
+        .select(`
+          *,
+          complaint_updates(*),
+          complaint_feedback(*)
+        `)
+        .eq('id', id)
+        .single()
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          return null // Complaint not found
+        }
+        throw error
+      }
+
+      const complaint: Complaint = {
+        id: data.id,
+        userId: data.user_id,
+        category: data.category,
+        subject: data.subject,
+        description: data.description,
+        location: data.location,
+        priority: data.priority,
+        status: data.status,
+        attachments: data.attachments || undefined,
+        assignedTo: data.assigned_to || undefined,
+        assignedDepartment: data.assigned_department || undefined,
+        submittedAt: new Date(data.submitted_at),
+        updatedAt: new Date(data.updated_at),
+        resolvedAt: data.resolved_at ? new Date(data.resolved_at) : undefined,
+        feedback: data.complaint_feedback?.[0] ? {
+          rating: data.complaint_feedback[0].rating,
+          comment: data.complaint_feedback[0].comment || undefined,
+          submittedAt: new Date(data.complaint_feedback[0].submitted_at)
+        } : undefined,
+        updates: data.complaint_updates.map((update: any) => ({
+          id: update.id,
+          complaintId: update.complaint_id,
+          message: update.message,
+          status: update.status,
+          updatedBy: update.updated_by,
+          updatedAt: new Date(update.updated_at)
+        }))
+      }
+
+      return complaint
+    } catch (error: any) {
+      throw new Error(error.message || 'Failed to track complaint')
     } finally {
       setLoading(false)
     }
