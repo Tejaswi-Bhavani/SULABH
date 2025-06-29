@@ -52,7 +52,8 @@ const RegisterPage: React.FC = () => {
       })
       navigate('/dashboard')
     } catch (err: any) {
-      setError('Registration failed. Please try again.')
+      // Display the specific error message from the auth context
+      setError(err.message || 'Registration failed. Please try again.')
     } finally {
       setIsSubmitting(false)
     }
@@ -91,6 +92,16 @@ const RegisterPage: React.FC = () => {
           {error && (
             <div className="bg-error-50 border border-error-200 text-error-700 px-4 py-3 rounded-lg">
               {error}
+              {error.includes('This email is already registered') && (
+                <div className="mt-2">
+                  <Link 
+                    to="/login" 
+                    className="text-primary-600 hover:text-primary-500 font-medium underline"
+                  >
+                    Click here to log in instead
+                  </Link>
+                </div>
+              )}
             </div>
           )}
 
