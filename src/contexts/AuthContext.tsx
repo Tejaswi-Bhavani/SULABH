@@ -103,12 +103,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       })
 
       if (error) {
-        // Handle specific error codes and messages
-        if (error.message?.includes('User already registered') || 
-            error.message?.includes('user_already_exists') ||
-            (error as any).code === 'user_already_exists') {
+        // Enhanced error handling for user already exists scenarios
+        const errorMessage = error.message?.toLowerCase() || ''
+        const errorCode = (error as any).code || ''
+        
+        // Check for various forms of "user already exists" errors
+        if (errorCode === 'user_already_exists' || 
+            errorMessage.includes('user already registered') || 
+            errorMessage.includes('user already exists') ||
+            errorMessage.includes('already registered') ||
+            errorMessage.includes('email address is already registered')) {
           throw new Error('This email is already registered. Please log in or use a different email.')
         }
+        
         throw error
       }
 
@@ -131,7 +138,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (error.message?.includes('This email is already registered')) {
         throw error
       }
-      throw new Error(error.message || 'Registration failed')
+      
+      // Handle any other registration errors with a user-friendly message
+      const errorMessage = error.message || 'Registration failed'
+      throw new Error(errorMessage)
     } finally {
       setLoading(false)
     }
