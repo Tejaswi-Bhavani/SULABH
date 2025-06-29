@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Menu, X, User, LogOut, Globe } from 'lucide-react'
+import { Menu, X, User, LogOut, Globe, BarChart3 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import LanguageSwitcher from '../Common/LanguageSwitcher'
 
@@ -12,8 +12,8 @@ const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
 
-  const handleLogout = () => {
-    logout()
+  const handleLogout = async () => {
+    await logout()
     navigate('/')
     setIsUserMenuOpen(false)
   }
@@ -24,8 +24,14 @@ const Header: React.FC = () => {
     ...(user ? [
       { name: t('nav.dashboard'), href: '/dashboard' },
       { name: t('nav.submitComplaint'), href: '/submit-complaint' },
-      ...(user.role === 'admin' ? [{ name: t('nav.admin'), href: '/admin' }] : []),
-      ...(user.role === 'authority' ? [{ name: t('nav.authority'), href: '/authority' }] : [])
+      ...(user.role === 'admin' ? [
+        { name: t('nav.admin'), href: '/admin' },
+        { name: 'Reports', href: '/admin/reports' }
+      ] : []),
+      ...(user.role === 'authority' ? [
+        { name: t('nav.authority'), href: '/authority' },
+        { name: 'Reports', href: '/reports' }
+      ] : [])
     ] : [])
   ]
 
