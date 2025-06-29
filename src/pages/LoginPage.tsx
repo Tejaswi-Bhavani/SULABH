@@ -22,6 +22,7 @@ const LoginPage: React.FC = () => {
   const location = useLocation()
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const from = location.state?.from?.pathname || '/dashboard'
 
@@ -36,10 +37,13 @@ const LoginPage: React.FC = () => {
   const onSubmit = async (data: LoginFormData) => {
     try {
       setError('')
+      setIsSubmitting(true)
       await login(data.email, data.password)
       navigate(from, { replace: true })
     } catch (err) {
       setError('Invalid email or password')
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -154,10 +158,10 @@ const LoginPage: React.FC = () => {
           <div>
             <button
               type="submit"
-              disabled={loading}
+              disabled={isSubmitting}
               className="w-full btn-primary flex justify-center items-center"
             >
-              {loading ? (
+              {isSubmitting ? (
                 <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
               ) : (
                 t('nav.login')
