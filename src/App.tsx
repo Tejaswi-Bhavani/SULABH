@@ -21,6 +21,7 @@ import ComplaintDetailsPage from './pages/ComplaintDetailsPage'
 import AdminDashboardPage from './pages/AdminDashboardPage'
 import AuthorityDashboardPage from './pages/AuthorityDashboardPage'
 import ReportsPage from './pages/ReportsPage'
+import EnhancedReportsPage from './pages/EnhancedReportsPage'
 import ProtectedRoute from './components/Auth/ProtectedRoute'
 
 function App() {
@@ -65,7 +66,7 @@ function App() {
                       } />
                       <Route path="/reports" element={
                         <ProtectedRoute requiredRole="authority">
-                          <ReportsPage />
+                          <EnhancedReportsPage />
                         </ProtectedRoute>
                       } />
                       <Route path="/admin" element={
@@ -75,7 +76,7 @@ function App() {
                       } />
                       <Route path="/admin/reports" element={
                         <ProtectedRoute requiredRole="admin">
-                          <ReportsPage />
+                          <EnhancedReportsPage />
                         </ProtectedRoute>
                       } />
                       <Route path="/authority" element={
