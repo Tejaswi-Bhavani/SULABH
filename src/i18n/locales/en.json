@@ -23,7 +23,9 @@
     "home": "Home",
     "dashboard": "Dashboard",
     "submitComplaint": "Submit Complaint",
+    "submitSuggestion": "Submit Suggestion",
     "trackComplaint": "Track Complaint",
+    "suggestions": "Suggestions",
     "login": "Login",
     "register": "Register",
     "logout": "Logout",
@@ -36,6 +38,7 @@
     "subtitle": "Online Grievance Redressal System",
     "description": "Easy and accessible platform for citizens to submit and track grievances",
     "submitComplaint": "Submit a Complaint",
+    "submitSuggestion": "Submit a Suggestion",
     "trackComplaint": "Track Your Complaint",
     "publicDashboard": "Public Dashboard",
     "features": {
@@ -122,12 +125,28 @@
       "closed": "Closed"
     }
   },
+  "suggestion": {
+    "submit": {
+      "title": "Submit New Suggestion",
+      "category": "Category",
+      "title": "Title",
+      "description": "Description"
+    },
+    "status": {
+      "active": "Active",
+      "under_review": "Under Review",
+      "implemented": "Implemented",
+      "rejected": "Rejected"
+    }
+  },
   "dashboard": {
     "welcome": "Welcome to your Dashboard",
     "myComplaints": "My Complaints",
+    "mySuggestions": "My Suggestions",
     "recentActivity": "Recent Activity",
     "statistics": "Statistics",
     "totalComplaints": "Total Complaints",
+    "totalSuggestions": "Total Suggestions",
     "pendingComplaints": "Pending",
     "resolvedComplaints": "Resolved",
     "averageResolutionTime": "Avg. Resolution Time"

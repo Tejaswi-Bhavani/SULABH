@@ -23,7 +23,9 @@
     "home": "হোম",
     "dashboard": "ড্যাশবোর্ড",
     "submitComplaint": "অভিযোগ জমা দিন",
+    "submitSuggestion": "পরামর্শ দিন",
     "trackComplaint": "অভিযোগ ট্র্যাক করুন",
+    "suggestions": "পরামর্শ",
     "login": "লগইন",
     "register": "নিবন্ধন",
     "logout": "লগআউট",
@@ -36,6 +38,7 @@
     "subtitle": "অনলাইন অভিযোগ নিষ্পত্তি ব্যবস্থা",
     "description": "নাগরিকদের অভিযোগ জমা দেওয়া এবং ট্র্যাক করার জন্য সহজ এবং অ্যাক্সেসযোগ্য প্ল্যাটফর্ম",
     "submitComplaint": "একটি অভিযোগ জমা দিন",
+    "submitSuggestion": "একটি পরামর্শ দিন",
     "trackComplaint": "আপনার অভিযোগ ট্র্যাক করুন",
     "publicDashboard": "পাবলিক ড্যাশবোর্ড",
     "features": {
@@ -122,12 +125,28 @@
       "closed": "বন্ধ"
     }
   },
+  "suggestion": {
+    "submit": {
+      "title": "নতুন পরামর্শ দিন",
+      "category": "বিভাগ",
+      "title": "শিরোনাম",
+      "description": "বিবরণ"
+    },
+    "status": {
+      "active": "সক্রিয়",
+      "under_review": "পর্যালোচনাধীন",
+      "implemented": "বাস্তবায়িত",
+      "rejected": "প্রত্যাখ্যাত"
+    }
+  },
   "dashboard": {
     "welcome": "আপনার ড্যাশবোর্ডে স্বাগতম",
     "myComplaints": "আমার অভিযোগ",
+    "mySuggestions": "আমার পরামর্শ",
     "recentActivity": "সাম্প্রতিক কার্যকলাপ",
     "statistics": "পরিসংখ্যান",
     "totalComplaints": "মোট অভিযোগ",
+    "totalSuggestions": "মোট পরামর্শ",
     "pendingComplaints": "অপেক্ষমাণ",
     "resolvedComplaints": "সমাধান হয়েছে",
     "averageResolutionTime": "গড় সমাধানের সময়"

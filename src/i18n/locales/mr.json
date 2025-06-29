@@ -23,7 +23,9 @@
     "home": "होम",
     "dashboard": "डॅशबोर्ड",
     "submitComplaint": "तक्रार नोंदवा",
+    "submitSuggestion": "सूचना द्या",
     "trackComplaint": "तक्रार ट्रॅक करा",
+    "suggestions": "सूचना",
     "login": "लॉगिन",
     "register": "नोंदणी",
     "logout": "लॉगआउट",
@@ -36,6 +38,7 @@
     "subtitle": "ऑनलाइन तक्रार निवारण प्रणाली",
     "description": "नागरिकांसाठी तक्रार नोंदवण्यासाठी आणि ट्रॅक करण्यासाठी सोपे आणि प्रवेशयोग्य प्लॅटफॉर्म",
     "submitComplaint": "तक्रार नोंदवा",
+    "submitSuggestion": "सूचना द्या",
     "trackComplaint": "तुमची तक्रार ट्रॅक करा",
     "publicDashboard": "सार्वजनिक डॅशबोर्ड",
     "features": {
@@ -122,12 +125,28 @@
       "closed": "बंद"
     }
   },
+  "suggestion": {
+    "submit": {
+      "title": "नवीन सूचना द्या",
+      "category": "श्रेणी",
+      "title": "शीर्षक",
+      "description": "वर्णन"
+    },
+    "status": {
+      "active": "सक्रिय",
+      "under_review": "पुनरावलोकनाधीन",
+      "implemented": "अंमलबजावणी",
+      "rejected": "नाकारले"
+    }
+  },
   "dashboard": {
     "welcome": "तुमच्या डॅशबोर्डमध्ये स्वागत आहे",
     "myComplaints": "माझ्या तक्रारी",
+    "mySuggestions": "माझ्या सूचना",
     "recentActivity": "अलीकडील क्रियाकलाप",
     "statistics": "आकडेवारी",
     "totalComplaints": "एकूण तक्रारी",
+    "totalSuggestions": "एकूण सूचना",
     "pendingComplaints": "प्रलंबित",
     "resolvedComplaints": "निराकरण झाले",
     "averageResolutionTime": "सरासरी निराकरण वेळ"

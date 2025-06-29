@@ -45,6 +45,61 @@ export interface ComplaintFeedback {
   submittedAt: Date
 }
 
+export interface Suggestion {
+  id: string
+  userId: string
+  title: string
+  description: string
+  category: ComplaintCategory
+  status: SuggestionStatus
+  supportCount: number
+  createdAt: Date
+  updatedAt: Date
+  supports: SuggestionSupport[]
+  comments: SuggestionComment[]
+}
+
+export interface SuggestionSupport {
+  id: string
+  suggestionId: string
+  userId: string
+  createdAt: Date
+}
+
+export interface SuggestionComment {
+  id: string
+  suggestionId: string
+  userId: string
+  comment: string
+  createdAt: Date
+  user?: {
+    firstName: string
+    lastName: string
+  }
+}
+
+export interface DiscussionGroup {
+  id: string
+  name: string
+  description: string
+  createdBy: string
+  isNgoGroup: boolean
+  createdAt: Date
+  members: GroupMember[]
+}
+
+export interface GroupMember {
+  id: string
+  groupId: string
+  userId: string
+  role: GroupMemberRole
+  joinedAt: Date
+  user?: {
+    firstName: string
+    lastName: string
+  }
+}
+
 export type ComplaintCategory = 
   | 'sanitation'
   | 'infrastructure'
@@ -61,6 +116,14 @@ export type ComplaintStatus =
   | 'resolved'
   | 'escalated'
   | 'closed'
+
+export type SuggestionStatus = 
+  | 'active'
+  | 'under_review'
+  | 'implemented'
+  | 'rejected'
+
+export type GroupMemberRole = 'member' | 'moderator' | 'admin'
 
 export interface Department {
   id: string
@@ -110,5 +173,19 @@ export interface ComplaintContextType {
   getComplaint: (id: string) => Complaint | undefined
   getComplaintsByUser: (userId: string) => Complaint[]
   trackComplaint: (id: string) => Promise<Complaint | null>
+  loading: boolean
+}
+
+export interface SuggestionContextType {
+  suggestions: Suggestion[]
+  submitSuggestion: (suggestionData: Omit<Suggestion, 'id' | 'userId' | 'supportCount' | 'createdAt' | 'updatedAt' | 'supports' | 'comments'>) => Promise<string>
+  updateSuggestion: (id: string, updates: Partial<Suggestion>) => Promise<void>
+  getSuggestion: (id: string) => Suggestion | undefined
+  getSuggestionsByUser: (userId: string) => Suggestion[]
+  supportSuggestion: (suggestionId: string) => Promise<void>
+  unsupportSuggestion: (suggestionId: string) => Promise<void>
+  addComment: (suggestionId: string, comment: string) => Promise<void>
+  updateComment: (commentId: string, comment: string) => Promise<void>
+  deleteComment: (commentId: string) => Promise<void>
   loading: boolean
 }

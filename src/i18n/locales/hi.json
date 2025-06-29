@@ -23,7 +23,9 @@
     "home": "होम",
     "dashboard": "डैशबोर्ड",
     "submitComplaint": "शिकायत दर्ज करें",
+    "submitSuggestion": "सुझाव दें",
     "trackComplaint": "शिकायत ट्रैक करें",
+    "suggestions": "सुझाव",
     "login": "लॉगिन",
     "register": "पंजीकरण",
     "logout": "लॉगआउट",
@@ -36,6 +38,7 @@
     "subtitle": "ऑनलाइन शिकायत निवारण प्रणाली",
     "description": "नागरिकों के लिए शिकायत दर्ज करने और ट्रैक करने का आसान और सुलभ मंच",
     "submitComplaint": "शिकायत दर्ज करें",
+    "submitSuggestion": "सुझाव दें",
     "trackComplaint": "अपनी शिकायत ट्रैक करें",
     "publicDashboard": "सार्वजनिक डैशबोर्ड",
     "features": {
@@ -122,12 +125,28 @@
       "closed": "बंद"
     }
   },
+  "suggestion": {
+    "submit": {
+      "title": "नया सुझाव दें",
+      "category": "श्रेणी",
+      "title": "शीर्षक",
+      "description": "विवरण"
+    },
+    "status": {
+      "active": "सक्रिय",
+      "under_review": "समीक्षाधीन",
+      "implemented": "लागू किया गया",
+      "rejected": "अस्वीकृत"
+    }
+  },
   "dashboard": {
     "welcome": "अपने डैशबोर्ड में आपका स्वागत है",
     "myComplaints": "मेरी शिकायतें",
+    "mySuggestions": "मेरे सुझाव",
     "recentActivity": "हाल की गतिविधि",
     "statistics": "आंकड़े",
     "totalComplaints": "कुल शिकायतें",
+    "totalSuggestions": "कुल सुझाव",
     "pendingComplaints": "लंबित",
     "resolvedComplaints": "हल हो गया",
     "averageResolutionTime": "औसत समाधान समय"
