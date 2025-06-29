@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { Menu, X, User, LogOut, Globe, BarChart3 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import LanguageSwitcher from '../Common/LanguageSwitcher'
+import NotificationBell from '../Common/NotificationBell'
 
 const Header: React.FC = () => {
   const { t } = useTranslation()
@@ -65,6 +66,8 @@ const Header: React.FC = () => {
           {/* Right side */}
           <div className="flex items-center space-x-4">
             <LanguageSwitcher />
+            
+            {user && <NotificationBell />}
             
             {user ? (
               <div className="relative">

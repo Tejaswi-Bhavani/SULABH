@@ -7,13 +7,15 @@ import { z } from 'zod'
 import { 
   FileText, 
   MapPin, 
-  Upload, 
   AlertCircle,
-  CheckCircle,
-  Camera
+  CheckCircle
 } from 'lucide-react'
 import { useComplaints } from '../contexts/ComplaintContext'
+import { useNotifications, emailTemplates } from '../contexts/NotificationContext'
+import { useAuth } from '../contexts/AuthContext'
 import { ComplaintCategory, Priority } from '../types'
+import FileUpload from '../components/Common/FileUpload'
+import toast from 'react-hot-toast'
 
 const complaintSchema = z.object({
   category: z.enum(['sanitation', 'infrastructure', 'publicServices', 'utilities', 'transportation', 'other']),
@@ -27,11 +29,13 @@ type ComplaintFormData = z.infer<typeof complaintSchema>
 
 const SubmitComplaintPage: React.FC = () => {
   const { t } = useTranslation()
+  const { user } = useAuth()
   const { submitComplaint, loading } = useComplaints()
+  const { sendNotification, sendEmailNotification } = useNotifications()
   const navigate = useNavigate()
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
-  const [attachments, setAttachments] = useState<File[]>([])
+  const [attachments, setAttachments] = useState<any[]>([])
 
   const {
     register,
@@ -61,16 +65,13 @@ const SubmitComplaintPage: React.FC = () => {
     { value: 'urgent', label: t('complaint.submit.priorities.urgent'), color: 'text-error-800' }
   ]
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(event.target.files || [])
-    setAttachments(prev => [...prev, ...files].slice(0, 5)) // Limit to 5 files
-  }
-
-  const removeAttachment = (index: number) => {
-    setAttachments(prev => prev.filter((_, i) => i !== index))
+  const handleFilesUploaded = (files: any[]) => {
+    setAttachments(files)
   }
 
   const onSubmit = async (data: ComplaintFormData) => {
+    if (!user) return
+
     try {
       setError('')
       setSuccess('')
@@ -78,10 +79,47 @@ const SubmitComplaintPage: React.FC = () => {
       const complaintId = await submitComplaint({
         ...data,
         status: 'pending',
-        attachments: attachments.map(file => file.name) // In real app, upload files first
+        attachments: attachments.map(file => file.url)
       })
       
+      // Send notification to user
+      await sendNotification(
+        user.id,
+        'complaint_submitted',
+        'Complaint Submitted Successfully',
+        `Your complaint "${data.subject}" has been submitted with ID: ${complaintId}`,
+        complaintId
+      )
+
+      // Send email notification
+      const template = emailTemplates.complaintSubmitted
+      const emailData = {
+        userName: `${user.firstName} ${user.lastName}`,
+        complaintId,
+        subject: data.subject,
+        category: data.category,
+        priority: data.priority,
+        submittedAt: new Date().toLocaleDateString()
+      }
+
+      // Replace template variables
+      let htmlContent = template.htmlContent
+      let textContent = template.textContent
+      Object.entries(emailData).forEach(([key, value]) => {
+        const placeholder = `{{${key}}}`
+        htmlContent = htmlContent.replace(new RegExp(placeholder, 'g'), String(value))
+        textContent = textContent.replace(new RegExp(placeholder, 'g'), String(value))
+      })
+
+      await sendEmailNotification(user.email, {
+        ...template,
+        htmlContent,
+        textContent
+      }, emailData)
+
       setSuccess(`Complaint submitted successfully! Your complaint ID is: ${complaintId}`)
+      toast.success('Complaint submitted successfully!')
+      
       reset()
       setAttachments([])
       
@@ -89,8 +127,9 @@ const SubmitComplaintPage: React.FC = () => {
       setTimeout(() => {
         navigate(`/complaint/${complaintId}`)
       }, 3000)
-    } catch (err) {
-      setError('Failed to submit complaint. Please try again.')
+    } catch (err: any) {
+      setError(err.message || 'Failed to submit complaint. Please try again.')
+      toast.error('Failed to submit complaint')
     }
   }
 
@@ -228,49 +267,14 @@ const SubmitComplaintPage: React.FC = () => {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 {t('complaint.submit.attachments')} (Optional)
               </label>
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors duration-200">
-                <input
-                  type="file"
-                  multiple
-                  accept="image/*,video/*,.pdf,.doc,.docx"
-                  onChange={handleFileUpload}
-                  className="hidden"
-                  id="file-upload"
-                />
-                <label htmlFor="file-upload" className="cursor-pointer">
-                  <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                  <p className="text-sm text-gray-600">
-                    Click to upload photos, videos, or documents
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Maximum 5 files, up to 10MB each
-                  </p>
-                </label>
-              </div>
-
-              {/* Attachment Preview */}
-              {attachments.length > 0 && (
-                <div className="mt-4 space-y-2">
-                  {attachments.map((file, index) => (
-                    <div key={index} className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
-                      <div className="flex items-center space-x-3">
-                        <Camera className="w-5 h-5 text-gray-400" />
-                        <span className="text-sm text-gray-700">{file.name}</span>
-                        <span className="text-xs text-gray-500">
-                          ({(file.size / 1024 / 1024).toFixed(2)} MB)
-                        </span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => removeAttachment(index)}
-                        className="text-error-600 hover:text-error-700 text-sm font-medium"
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <FileUpload
+                onFilesUploaded={handleFilesUploaded}
+                maxFiles={5}
+                maxSize={10 * 1024 * 1024} // 10MB
+                bucket="complaint-attachments"
+                folder={`complaints/${user?.id}`}
+                acceptedTypes={['image/*', 'video/*', '.pdf', '.doc', '.docx']}
+              />
             </div>
 
             {/* Submit Button */}
