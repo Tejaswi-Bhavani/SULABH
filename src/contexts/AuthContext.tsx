@@ -68,7 +68,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setUser({
           id: profile.id,
           email: profile.email,
-          username: profile.username,
+          username: profile.username || '',
           firstName: profile.first_name,
           lastName: profile.last_name,
           phone: profile.phone || undefined,
