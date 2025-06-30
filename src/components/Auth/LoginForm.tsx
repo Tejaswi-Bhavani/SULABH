@@ -3,7 +3,7 @@ import { useNavigate, Link, useLocation } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Eye, EyeOff, Mail, User, Lock, AlertCircle, Clock } from 'lucide-react'
+import { Eye, EyeOff, User, Lock, AlertCircle, Clock } from 'lucide-react'
 import { supabase, checkRateLimit, getRemainingLockoutTime } from '../../lib/supabase'
 import toast from 'react-hot-toast'
 

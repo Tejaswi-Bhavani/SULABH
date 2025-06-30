@@ -1,16 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { useTranslation } from 'react-i18next'
+
 import { 
   BarChart3, 
-  TrendingUp, 
   Users, 
   Clock, 
   Star,
   AlertTriangle,
-  CheckCircle,
   FileText,
-  Calendar,
-  Download,
   Lightbulb
 } from 'lucide-react'
 import { useReports, ReportData } from '../contexts/ReportsContext'
@@ -21,13 +17,12 @@ import {
   ComplaintTrendsChart,
   CategoryDistributionChart,
   DepartmentPerformanceChart,
-  SatisfactionRadarChart,
-  ResolutionTimeChart
+  SatisfactionRadarChart
 } from '../components/Reports/AdvancedCharts'
 import { supabase } from '../lib/supabase'
 
 const EnhancedReportsPage: React.FC = () => {
-  const { t } = useTranslation()
+
   const { user } = useAuth()
   const { 
     generateDashboardReport, 
@@ -41,10 +36,8 @@ const EnhancedReportsPage: React.FC = () => {
   const [reportData, setReportData] = useState<ReportData | null>(null)
   const [selectedReport, setSelectedReport] = useState('dashboard')
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'quarter' | 'year'>('month')
-  const [escalationData, setEscalationData] = useState<any[]>([])
+  // escalationData, feedbackData, userActivityData removed as they are unused
   const [complaintData, setComplaintData] = useState<any[]>([])
-  const [feedbackData, setFeedbackData] = useState<any>(null)
-  const [userActivityData, setUserActivityData] = useState<any>(null)
   const [predictiveData, setPredictiveData] = useState<any>(null)
   const [predictiveLoading, setPredictiveLoading] = useState(false)
 
@@ -75,17 +68,17 @@ const EnhancedReportsPage: React.FC = () => {
       setReportData(dashboard)
 
       if (selectedReport === 'escalation') {
-        const escalation = await generateEscalationReport()
-        setEscalationData(escalation)
+        await generateEscalationReport()
+        // setEscalationData(escalation) // Removed as escalationData is unused
       } else if (selectedReport === 'complaints') {
         const complaints = await generateComplaintReport(filters)
         setComplaintData(complaints)
       } else if (selectedReport === 'feedback') {
-        const feedback = await generateFeedbackSummary()
-        setFeedbackData(feedback)
+        await generateFeedbackSummary()
+        // setFeedbackData(feedback) // Removed as feedbackData is unused
       } else if (selectedReport === 'users') {
-        const userActivity = await generateUserActivityReport()
-        setUserActivityData(userActivity)
+        await generateUserActivityReport()
+        // setUserActivityData(userActivity) // Removed as userActivityData is unused
       } else if (selectedReport === 'predictive') {
         loadPredictiveData()
       }
@@ -121,20 +114,20 @@ const EnhancedReportsPage: React.FC = () => {
     try {
       switch (reportType) {
         case 'escalation':
-          const escalation = await generateEscalationReport()
-          setEscalationData(escalation)
+          await generateEscalationReport()
+          // setEscalationData(escalation) // Removed as escalationData is unused
           break
         case 'complaints':
           const complaints = await generateComplaintReport(filters)
           setComplaintData(complaints)
           break
         case 'feedback':
-          const feedback = await generateFeedbackSummary()
-          setFeedbackData(feedback)
+          await generateFeedbackSummary()
+          // setFeedbackData(feedback) // Removed as feedbackData is unused
           break
         case 'users':
-          const userActivity = await generateUserActivityReport()
-          setUserActivityData(userActivity)
+          await generateUserActivityReport()
+          // setUserActivityData(userActivity) // Removed as userActivityData is unused
           break
         case 'predictive':
           loadPredictiveData()
@@ -597,14 +590,16 @@ const EnhancedReportsPage: React.FC = () => {
                     </div>
                     
                     {/* Render chart using ComplaintTrendsChart component */}
-                    <ComplaintTrendsChart 
-                      data={{
-                        labels: predictiveChartData.labels,
-                        submitted: [...predictiveChartData.historical.submitted, ...predictiveChartData.predictions.submitted.map((v: any) => v !== null ? v : undefined)],
-                        resolved: [...predictiveChartData.historical.resolved, ...predictiveChartData.predictions.resolved.map((v: any) => v !== null ? v : undefined)],
-                        pending: [...predictiveData.historical.map((d: any) => d.pending), ...predictiveData.predictions.map((d: any) => d.pending)]
-                      }}
-                    />
+                    {predictiveChartData && (
+                      <ComplaintTrendsChart
+                        data={{
+                          labels: predictiveChartData.labels,
+                          submitted: [...predictiveChartData.historical.submitted, ...predictiveChartData.predictions.submitted.map((v: any) => v !== null ? v : undefined)],
+                          resolved: [...predictiveChartData.historical.resolved, ...predictiveChartData.predictions.resolved.map((v: any) => v !== null ? v : undefined)],
+                          pending: [...predictiveData.historical.map((d: any) => d.pending), ...predictiveData.predictions.map((d: any) => d.pending)]
+                        }}
+                      />
+                    )}
                   </div>
                   
                   <div className="mt-6 border-t border-gray-200 pt-4">

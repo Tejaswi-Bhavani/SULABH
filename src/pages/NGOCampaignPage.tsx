@@ -9,8 +9,7 @@ import {
   Heart,
   MessageCircle,
   UserPlus,
-  Settings,
-  Image as ImageIcon
+  Settings
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'

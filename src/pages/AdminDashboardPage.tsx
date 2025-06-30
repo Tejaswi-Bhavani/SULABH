@@ -1,14 +1,11 @@
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { 
-  BarChart3, 
-  Users, 
   FileText, 
   Clock, 
   CheckCircle, 
   AlertTriangle,
   TrendingUp,
-  Calendar,
   Filter,
   Download
 } from 'lucide-react'

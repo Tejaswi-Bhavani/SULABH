@@ -36,7 +36,7 @@ const VoiceInput: React.FC<VoiceInputProps> = ({
         setError('')
       }
 
-      recognition.onresult = (event) => {
+      recognition.onresult = (event: SpeechRecognitionEvent) => {
         let finalTranscript = ''
         let interimTranscript = ''
 
@@ -57,7 +57,7 @@ const VoiceInput: React.FC<VoiceInputProps> = ({
         }
       }
 
-      recognition.onerror = (event) => {
+      recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
         setError(getErrorMessage(event.error))
         setIsListening(false)
       }
@@ -198,10 +198,52 @@ const VoiceInput: React.FC<VoiceInputProps> = ({
 }
 
 // Extend the Window interface to include Speech Recognition
+
 declare global {
+  interface SpeechRecognitionEvent extends Event {
+    readonly resultIndex: number;
+    readonly results: SpeechRecognitionResultList;
+    // Add other properties if needed, or use 'any' for broader compatibility initially
+  }
+
+  interface SpeechRecognitionErrorEvent extends Event {
+    readonly error: string;
+    readonly message: string;
+    // Add other properties if needed
+  }
+
+  interface SpeechRecognitionStatic {
+    new(): SpeechRecognition;
+  }
+
+  interface SpeechRecognition extends EventTarget {
+    grammars: any; // SpeechGrammarList; Not strictly typed here for simplicity
+    lang: string;
+    continuous: boolean;
+    interimResults: boolean;
+    maxAlternatives: number;
+    serviceURI: string;
+
+    start(): void;
+    stop(): void;
+    abort(): void;
+
+    onaudiostart: ((this: SpeechRecognition, ev: Event) => any) | null;
+    onsoundstart: ((this: SpeechRecognition, ev: Event) => any) | null;
+    onspeechstart: ((this: SpeechRecognition, ev: Event) => any) | null;
+    onspeechend: ((this: SpeechRecognition, ev: Event) => any) | null;
+    onsoundend: ((this: SpeechRecognition, ev: Event) => any) | null;
+    onaudioend: ((this: SpeechRecognition, ev: Event) => any) | null;
+    onresult: ((this: SpeechRecognition, ev: SpeechRecognitionEvent) => any) | null;
+    onnomatch: ((this: SpeechRecognition, ev: SpeechRecognitionEvent) => any) | null;
+    onerror: ((this: SpeechRecognition, ev: SpeechRecognitionErrorEvent) => any) | null;
+    onstart: ((this: SpeechRecognition, ev: Event) => any) | null;
+    onend: ((this: SpeechRecognition, ev: Event) => any) | null;
+  }
+
   interface Window {
-    SpeechRecognition: typeof SpeechRecognition
-    webkitSpeechRecognition: typeof SpeechRecognition
+    SpeechRecognition: SpeechRecognitionStatic;
+    webkitSpeechRecognition: SpeechRecognitionStatic;
   }
 }
 

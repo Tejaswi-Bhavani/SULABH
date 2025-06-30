@@ -474,7 +474,7 @@ export const ReportsProvider: React.FC<ReportsProviderProps> = ({ children }) =>
               }
               acc[category].total++
               acc[category].ratings.push(f.rating)
-              acc[category].averageRating = acc[category].ratings.reduce((a, b) => a + b, 0) / acc[category].ratings.length
+              acc[category].averageRating = acc[category].ratings.reduce((a: number, b: number) => a + b, 0) / acc[category].ratings.length
               return acc
             }, {} as Record<string, any>) || {}
           }

@@ -6,8 +6,6 @@ import {
   Heart, 
   MessageCircle, 
   Calendar, 
-  User, 
-  Filter,
   Search,
   Plus,
   TrendingUp,

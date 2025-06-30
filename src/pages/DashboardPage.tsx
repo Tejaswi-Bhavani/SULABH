@@ -18,7 +18,7 @@ import { format } from 'date-fns'
 const DashboardPage: React.FC = () => {
   const { t } = useTranslation()
   const { user } = useAuth()
-  const { complaints, getComplaintsByUser } = useComplaints()
+  const { getComplaintsByUser } = useComplaints()
 
   const userComplaints = user ? getComplaintsByUser(user.id) : []
   

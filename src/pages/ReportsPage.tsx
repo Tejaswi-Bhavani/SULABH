@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react'
-import { useTranslation } from 'react-i18next'
 import { 
   BarChart, 
   Bar, 
@@ -18,7 +17,6 @@ import {
 import { 
   FileText, 
   Download, 
-  Calendar, 
   TrendingUp, 
   AlertTriangle,
   Users,
@@ -31,7 +29,6 @@ import { useReports, ReportData } from '../contexts/ReportsContext'
 import { useAuth } from '../contexts/AuthContext'
 
 const ReportsPage: React.FC = () => {
-  const { t } = useTranslation()
   const { user } = useAuth()
   const { 
     generateDashboardReport, 
@@ -307,7 +304,7 @@ const ReportsPage: React.FC = () => {
                         { name: 'In Progress', value: reportData.inProgressComplaints },
                         { name: 'Resolved', value: reportData.resolvedComplaints },
                         { name: 'Escalated', value: reportData.escalatedComplaints }
-                      ].map((entry, index) => (
+                      ].map((_, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
@@ -723,7 +720,7 @@ const ReportsPage: React.FC = () => {
                       fill="#8884d8"
                       dataKey="value"
                     >
-                      {Object.entries(userActivityData.usersByRole).map((entry, index) => (
+                      {Object.entries(userActivityData.usersByRole).map((_, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>

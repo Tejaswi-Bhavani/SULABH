@@ -5,13 +5,12 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { 
   User, 
-  Mail, 
-  Phone, 
   Bell, 
   Shield, 
   Save,
   AlertCircle,
-  CheckCircle
+  CheckCircle,
+  Globe
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
@@ -29,7 +28,7 @@ const profileSchema = z.object({
 type ProfileFormData = z.infer<typeof profileSchema>
 
 const UserSettingsPage: React.FC = () => {
-  const { t, i18n } = useTranslation()
+  const { i18n } = useTranslation()
   const { user } = useAuth()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -40,7 +39,6 @@ const UserSettingsPage: React.FC = () => {
     register,
     handleSubmit,
     formState: { errors },
-    reset,
     setValue
   } = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),

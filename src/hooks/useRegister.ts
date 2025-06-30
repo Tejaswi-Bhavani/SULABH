@@ -46,11 +46,26 @@ export const useRegister = () => {
       // Validate all required fields
       const validationResult = registerSchema.safeParse(userData)
       if (!validationResult.success) {
-        const formattedErrors = validationResult.error.format()
-        const firstError = Object.values(formattedErrors)
-          .find(field => field && field._errors && field._errors.length > 0)
+        const formattedErrors = validationResult.error.format();
+        let errorMessage = 'Invalid form data';
         
-        throw new Error(firstError?._errors[0] || 'Invalid form data')
+        // Iterate over the formatted errors to find the first message
+        // Check form errors first
+        if (formattedErrors._errors && formattedErrors._errors.length > 0) {
+            errorMessage = formattedErrors._errors[0];
+        } else {
+          // Check field-specific errors
+          for (const key in formattedErrors) {
+            if (key !== '_errors' && formattedErrors.hasOwnProperty(key)) {
+              const fieldErrorObject = (formattedErrors as any)[key];
+              if (fieldErrorObject && fieldErrorObject._errors && fieldErrorObject._errors.length > 0) {
+                errorMessage = fieldErrorObject._errors[0];
+                break;
+              }
+            }
+          }
+        }
+        throw new Error(errorMessage);
       }
       
       // Check if username already exists

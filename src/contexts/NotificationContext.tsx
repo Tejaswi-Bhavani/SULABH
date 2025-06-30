@@ -129,9 +129,11 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
           setNotifications(prev => [newNotification, ...prev])
           
           // Show toast notification
-          toast.success(newNotification.title, {
-            description: newNotification.message
-          })
+          // The 'description' property is not a standard option for react-hot-toast's success method.
+          // The first argument is the message. If a more complex structure is needed,
+          // a custom toast or React element should be used as the first argument.
+          // For now, we'll just use the title as the main message.
+          toast.success(newNotification.title)
         }
       )
       .subscribe()

@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Eye, EyeOff, Lock, AlertCircle, CheckCircle } from 'lucide-react'
-import { supabase, validatePassword } from '../../lib/supabase'
+import { supabase } from '../../lib/supabase'
 import toast from 'react-hot-toast'
 
 // Define the form schema with Zod

@@ -1,5 +1,5 @@
 import React from 'react'
-import { Link } from 'react-router-dom'
+
 import LoginForm from '../components/Auth/LoginForm'
 
 const LoginPage: React.FC = () => {

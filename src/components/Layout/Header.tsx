@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Menu, X, User, LogOut, Globe, BarChart3, Settings } from 'lucide-react'
+import { Menu, X, LogOut, Settings } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import LanguageSwitcher from '../Common/LanguageSwitcher'
 import NotificationBell from '../Common/NotificationBell'

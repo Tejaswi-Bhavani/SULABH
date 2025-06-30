@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { supabase } from '../lib/supabase'
 import { Complaint, ComplaintContextType } from '../types'
 import { useAuth } from './AuthContext'
-import { getCachedData, setCachedData, invalidateCache, withCache } from '../lib/cacheUtils'
+import { getCachedData, setCachedData, invalidateCache } from '../lib/cacheUtils'
 
 const ComplaintContext = createContext<ComplaintContextType | undefined>(undefined)
 
@@ -89,13 +89,14 @@ export const ComplaintProvider: React.FC<ComplaintProviderProps> = ({ children }
           comment: complaint.complaint_feedback[0].comment || undefined,
           submittedAt: new Date(complaint.complaint_feedback[0].submitted_at)
         } : undefined,
-        updates: complaint.complaint_updates.map(update => ({
-          id: update.id,
-          complaintId: update.complaint_id,
-          message: update.message,
-          status: update.status,
-          updatedBy: update.updated_by,
-          updatedAt: new Date(update.updated_at)
+        // rawUpdate is from DB (snake_case), the returned object conforms to ComplaintUpdate (camelCase)
+        updates: complaint.complaint_updates.map((rawUpdate: any) => ({
+          id: rawUpdate.id,
+          complaintId: rawUpdate.complaint_id,
+          message: rawUpdate.message,
+          status: rawUpdate.status,
+          updatedBy: rawUpdate.updated_by,
+          updatedAt: new Date(rawUpdate.updated_at)
         }))
       }))
 
@@ -235,13 +236,14 @@ export const ComplaintProvider: React.FC<ComplaintProviderProps> = ({ children }
           comment: data.complaint_feedback[0].comment || undefined,
           submittedAt: new Date(data.complaint_feedback[0].submitted_at)
         } : undefined,
-        updates: data.complaint_updates.map((update: any) => ({
-          id: update.id,
-          complaintId: update.complaint_id,
-          message: update.message,
-          status: update.status,
-          updatedBy: update.updated_by,
-          updatedAt: new Date(update.updated_at)
+        // rawUpdate is from DB (snake_case), the returned object conforms to ComplaintUpdate (camelCase)
+        updates: data.complaint_updates.map((rawUpdate: any) => ({
+          id: rawUpdate.id,
+          complaintId: rawUpdate.complaint_id,
+          message: rawUpdate.message,
+          status: rawUpdate.status,
+          updatedBy: rawUpdate.updated_by,
+          updatedAt: new Date(rawUpdate.updated_at)
         }))
       }
 

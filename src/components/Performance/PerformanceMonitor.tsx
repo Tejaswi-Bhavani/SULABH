@@ -66,7 +66,7 @@ const PerformanceMonitor: React.FC = () => {
     const apiResponseTime = Math.random() * 500 + 100
     
     return {
-      pageLoadTime: navigation.loadEventEnd - navigation.navigationStart,
+      pageLoadTime: navigation.loadEventEnd - navigation.fetchStart,
       firstContentfulPaint: fcp,
       largestContentfulPaint: lcp,
       cumulativeLayoutShift: cls,

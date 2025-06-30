@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { supabase } from '../lib/supabase'
-import { Suggestion, SuggestionContextType, SuggestionSupport, SuggestionComment } from '../types'
+import { Suggestion, SuggestionContextType } from '../types'
 import { useAuth } from './AuthContext'
 import toast from 'react-hot-toast'
 

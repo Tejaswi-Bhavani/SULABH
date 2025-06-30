@@ -50,11 +50,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       if (event === 'SIGNED_IN' && session?.user) {
         await loadUserProfile(session.user)
-      } else if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
+      } else if (event === 'SIGNED_OUT') {
         setUser(null)
       } else if (event === 'USER_UPDATED' && session?.user) {
         await loadUserProfile(session.user)
       }
+      // According to the TS error (TS2367), 'USER_DELETED' is not a recognized AuthChangeEvent here.
+      // Handling for user deletion, if necessary via auth events, would require the event type to support it.
+      // For now, SIGNED_OUT should cover the user becoming null.
     })
 
     return () => subscription.unsubscribe()

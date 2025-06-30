@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react'
-import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { 
   Users, 
@@ -10,7 +9,6 @@ import {
   Settings,
   UserPlus,
   Crown,
-  Shield,
   Eye,
   X
 } from 'lucide-react'
@@ -20,7 +18,6 @@ import CampaignCreator from '../components/NGO/CampaignCreator'
 import { format } from 'date-fns'
 
 const NGODashboardPage: React.FC = () => {
-  const { t } = useTranslation()
   const { user } = useAuth()
   const [selectedTab, setSelectedTab] = useState('overview')
   const [showCampaignCreator, setShowCampaignCreator] = useState(false)
@@ -69,7 +66,7 @@ const NGODashboardPage: React.FC = () => {
     }
   }
 
-  const handleCampaignCreated = (campaign: any) => {
+  const handleCampaignCreated = () => {
     setShowCampaignCreator(false)
     loadCampaigns()
   }

@@ -201,7 +201,7 @@ const TrackComplaintPage: React.FC = () => {
             <div className="card">
               <h3 className="text-lg font-medium text-gray-900 mb-4">Status Updates</h3>
               <div className="space-y-4">
-                {complaint.updates.map((update, index) => {
+                {complaint.updates.map((update) => {
                   const StatusIcon = getStatusIcon(update.status)
                   return (
                     <div key={update.id} className="flex items-start space-x-4">
