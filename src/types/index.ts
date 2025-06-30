@@ -1,11 +1,13 @@
 export interface User {
   id: string
   email: string
+  username: string
   firstName: string
   lastName: string
   phone?: string
   role: 'citizen' | 'authority' | 'admin' | 'ngo'
   department?: string
+  isVerified?: boolean
   createdAt: Date
   updatedAt: Date
 }
@@ -152,15 +154,19 @@ export interface Statistics {
 
 export interface AuthContextType {
   user: User | null
-  login: (email: string, password: string) => Promise<void>
+  session: any | null
+  login: (identifier: string, password: string, rememberMe?: boolean) => Promise<void>
   register: (userData: RegisterData) => Promise<void>
   logout: () => void
+  resetPassword: (email: string) => Promise<void>
+  updatePassword: (password: string) => Promise<void>
   loading: boolean
 }
 
 export interface RegisterData {
   firstName: string
   lastName: string
+  username: string
   email: string
   phone?: string
   password: string

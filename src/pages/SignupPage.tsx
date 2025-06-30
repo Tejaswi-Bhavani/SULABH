@@ -1,8 +1,8 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
-import LoginForm from '../components/Auth/LoginForm'
+import SignupForm from '../components/Auth/SignupForm'
 
-const LoginPage: React.FC = () => {
+const SignupPage: React.FC = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
@@ -25,17 +25,17 @@ const LoginPage: React.FC = () => {
             </div>
           </div>
           <h2 className="mt-6 text-3xl font-bold text-gray-900">
-            Login to SULABH
+            Create Account
           </h2>
           <p className="mt-2 text-sm text-gray-600">
-            Welcome back to SULABH
+            Join SULABH to submit and track your grievances
           </p>
         </div>
 
-        <LoginForm />
+        <SignupForm />
       </div>
     </div>
   )
 }
 
-export default LoginPage
+export default SignupPage

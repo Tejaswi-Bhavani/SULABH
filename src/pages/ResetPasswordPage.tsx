@@ -1,8 +1,7 @@
 import React from 'react'
-import { Link } from 'react-router-dom'
-import LoginForm from '../components/Auth/LoginForm'
+import ResetPasswordForm from '../components/Auth/ResetPasswordForm'
 
-const LoginPage: React.FC = () => {
+const ResetPasswordPage: React.FC = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
@@ -25,17 +24,17 @@ const LoginPage: React.FC = () => {
             </div>
           </div>
           <h2 className="mt-6 text-3xl font-bold text-gray-900">
-            Login to SULABH
+            Reset Password
           </h2>
           <p className="mt-2 text-sm text-gray-600">
-            Welcome back to SULABH
+            Create a new secure password for your account
           </p>
         </div>
 
-        <LoginForm />
+        <ResetPasswordForm />
       </div>
     </div>
   )
 }
 
-export default LoginPage
+export default ResetPasswordPage

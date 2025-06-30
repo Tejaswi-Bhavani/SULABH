@@ -8,7 +8,10 @@ import { FileUploadProvider } from './contexts/FileUploadContext'
 import Layout from './components/Layout/Layout'
 import HomePage from './pages/HomePage'
 import LoginPage from './pages/LoginPage'
-import RegisterPage from './pages/RegisterPage'
+import SignupPage from './pages/SignupPage'
+import ForgotPasswordPage from './pages/ForgotPasswordPage'
+import ResetPasswordPage from './pages/ResetPasswordPage'
+import AuthCallbackPage from './pages/AuthCallbackPage'
 import DashboardPage from './pages/DashboardPage'
 import SubmitComplaintPage from './pages/SubmitComplaintPage'
 import SubmitSuggestionPage from './pages/SubmitSuggestionPage'
@@ -40,7 +43,10 @@ function App() {
                     <Routes>
                       <Route path="/" element={<HomePage />} />
                       <Route path="/login" element={<LoginPage />} />
-                      <Route path="/register" element={<RegisterPage />} />
+                      <Route path="/signup" element={<SignupPage />} />
+                      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                      <Route path="/reset-password" element={<ResetPasswordPage />} />
+                      <Route path="/auth/callback" element={<AuthCallbackPage />} />
                       <Route path="/track" element={<TrackComplaintPage />} />
                       <Route path="/suggestions" element={<SuggestionsPage />} />
                       <Route path="/suggestion/:id" element={<SuggestionDetailsPage />} />
