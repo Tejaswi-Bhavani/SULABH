@@ -125,7 +125,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           .from('profiles')
           .insert({
             id: data.user.id,
-            email: data.user.email,
+            email: userData.email,
             first_name: userData.firstName,
             last_name: userData.lastName,
             phone: userData.phone,

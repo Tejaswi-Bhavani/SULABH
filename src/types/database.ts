@@ -19,6 +19,9 @@ export interface Database {
           role: 'citizen' | 'authority' | 'admin' | 'ngo'
           department: string | null
           is_verified: boolean
+          phone_notification_enabled: boolean
+          email_notification_enabled: boolean
+          is_phone_verified: boolean
           created_at: string
           updated_at: string
         }
@@ -31,6 +34,9 @@ export interface Database {
           role?: 'citizen' | 'authority' | 'admin' | 'ngo'
           department?: string | null
           is_verified?: boolean
+          phone_notification_enabled?: boolean
+          email_notification_enabled?: boolean
+          is_phone_verified?: boolean
           created_at?: string
           updated_at?: string
         }
@@ -43,6 +49,9 @@ export interface Database {
           role?: 'citizen' | 'authority' | 'admin' | 'ngo'
           department?: string | null
           is_verified?: boolean
+          phone_notification_enabled?: boolean
+          email_notification_enabled?: boolean
+          is_phone_verified?: boolean
           created_at?: string
           updated_at?: string
         }
@@ -234,6 +243,7 @@ export interface Database {
           description: string
           created_by: string
           is_ngo_group: boolean
+          metadata: Json | null
           created_at: string
         }
         Insert: {
@@ -242,6 +252,7 @@ export interface Database {
           description: string
           created_by: string
           is_ngo_group?: boolean
+          metadata?: Json | null
           created_at?: string
         }
         Update: {
@@ -250,6 +261,7 @@ export interface Database {
           description?: string
           created_by?: string
           is_ngo_group?: boolean
+          metadata?: Json | null
           created_at?: string
         }
       }
@@ -274,6 +286,87 @@ export interface Database {
           user_id?: string
           role?: 'member' | 'moderator' | 'admin'
           joined_at?: string
+        }
+      }
+      notifications: {
+        Row: {
+          id: string
+          user_id: string
+          type: string
+          title: string
+          message: string
+          related_id: string | null
+          is_read: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          type: string
+          title: string
+          message: string
+          related_id?: string | null
+          is_read?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          type?: string
+          title?: string
+          message?: string
+          related_id?: string | null
+          is_read?: boolean
+          created_at?: string
+        }
+      }
+      cache: {
+        Row: {
+          key: string
+          data: Json
+          created_at: string
+        }
+        Insert: {
+          key: string
+          data: Json
+          created_at?: string
+        }
+        Update: {
+          key?: string
+          data?: Json
+          created_at?: string
+        }
+      }
+      sms_logs: {
+        Row: {
+          id: string
+          phone_number: string
+          message: string
+          complaint_id: string | null
+          user_id: string | null
+          message_id: string | null
+          status: string | null
+          sent_at: string
+        }
+        Insert: {
+          id?: string
+          phone_number: string
+          message: string
+          complaint_id?: string | null
+          user_id?: string | null
+          message_id?: string | null
+          status?: string | null
+          sent_at?: string
+        }
+        Update: {
+          id?: string
+          phone_number?: string
+          message?: string
+          complaint_id?: string | null
+          user_id?: string | null
+          message_id?: string | null
+          status?: string | null
+          sent_at?: string
         }
       }
     }
