@@ -28,10 +28,14 @@
     "suggestions": "পরামর্শ",
     "login": "লগইন",
     "register": "নিবন্ধন",
+    "signup": "সাইন আপ",
     "logout": "লগআউট",
     "profile": "প্রোফাইল",
     "admin": "অ্যাডমিন প্যানেল",
-    "authority": "কর্তৃপক্ষ প্যানেল"
+    "authority": "কর্তৃপক্ষ প্যানেল",
+    "reports": "রিপোর্ট",
+    "ngoDashboard": "এনজিও ড্যাশবোর্ড",
+    "settings": "সেটিংস"
   },
   "home": {
     "title": "সুলভ",

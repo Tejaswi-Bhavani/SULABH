@@ -28,10 +28,14 @@
     "suggestions": "सूचना",
     "login": "लॉगिन",
     "register": "नोंदणी",
+    "signup": "साइन अप",
     "logout": "लॉगआउट",
     "profile": "प्रोफाइल",
     "admin": "अॅडमिन पॅनेल",
-    "authority": "प्राधिकरण पॅनेल"
+    "authority": "प्राधिकरण पॅनेल",
+    "reports": "अहवाल",
+    "ngoDashboard": "एनजीओ डॅशबोर्ड",
+    "settings": "सेटिंग्ज"
   },
   "home": {
     "title": "सुलभ",

@@ -28,10 +28,14 @@
     "suggestions": "பரிந்துரைகள்",
     "login": "உள்நுழைவு",
     "register": "பதிவு",
+    "signup": "பதிவு செய்க",
     "logout": "வெளியேறு",
     "profile": "சுயவிவரம்",
     "admin": "நிர்வாக பேனல்",
-    "authority": "அதிகாரி பேனல்"
+    "authority": "அதிகாரி பேனல்",
+    "reports": "அறிக்கைகள்",
+    "ngoDashboard": "என்ஜிஓ டாஷ்போர்டு",
+    "settings": "அமைப்புகள்"
   },
   "home": {
     "title": "சுலப்",
@@ -88,7 +92,7 @@
     "submit": {
       "title": "புதிய புகார் சமர்ப்பிக்கவும்",
       "category": "வகை",
-      "subject": "விषயம்",
+      "subject": "விஷயம்",
       "description": "விளக்கம்",
       "location": "இடம்",
       "attachments": "இணைப்புகள்",

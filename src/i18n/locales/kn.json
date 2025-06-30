@@ -28,10 +28,14 @@
     "suggestions": "ಸಲಹೆಗಳು",
     "login": "ಲಾಗಿನ್",
     "register": "ನೋಂದಣಿ",
+    "signup": "ಸೈನ್ ಅಪ್",
     "logout": "ಲಾಗ್ ಔಟ್",
     "profile": "ಪ್ರೊಫೈಲ್",
     "admin": "ಅಡ್ಮಿನ್ ಪ್ಯಾನೆಲ್",
-    "authority": "ಅಧಿಕಾರಿ ಪ್ಯಾನೆಲ್"
+    "authority": "ಅಧಿಕಾರಿ ಪ್ಯಾನೆಲ್",
+    "reports": "ವರದಿಗಳು",
+    "ngoDashboard": "ಎನ್‌ಜಿಓ ಡ್ಯಾಶ್‌ಬೋರ್ಡ್",
+    "settings": "ಸೆಟ್ಟಿಂಗ್‌ಗಳು"
   },
   "home": {
     "title": "ಸುಲಭ್",
