@@ -28,10 +28,14 @@
     "suggestions": "Suggestions",
     "login": "Login",
     "register": "Register",
+    "signup": "Sign Up",
     "logout": "Logout",
     "profile": "Profile",
     "admin": "Admin Panel",
-    "authority": "Authority Panel"
+    "authority": "Authority Panel",
+    "reports": "Reports",
+    "ngoDashboard": "NGO Dashboard",
+    "settings": "Settings"
   },
   "home": {
     "title": "SULABH",
