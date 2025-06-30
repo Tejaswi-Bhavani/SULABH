@@ -117,12 +117,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           .from('profiles')
           .select('email')
           .eq('username', identifier)
-          
-        if (profileError) {
-          throw new Error('Invalid username or password')
-        }
         
-        if (!profileData || profileData.length === 0) {
+        // Check if profile data exists and has at least one record
+        if (profileError || !profileData || profileData.length === 0) {
           throw new Error('Invalid username or password')
         }
         

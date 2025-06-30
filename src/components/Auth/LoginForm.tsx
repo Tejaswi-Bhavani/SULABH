@@ -94,12 +94,9 @@ const LoginForm: React.FC = () => {
           .from('profiles')
           .select('email')
           .eq('username', identifier)
-          
-        if (profileError) {
-          throw new Error('Invalid username or password')
-        }
         
-        if (!profileData || profileData.length === 0) {
+        // Check if profile data exists and has at least one record
+        if (profileError || !profileData || profileData.length === 0) {
           throw new Error('Invalid username or password')
         }
         
@@ -131,7 +128,7 @@ const LoginForm: React.FC = () => {
       navigate('/dashboard')
     } catch (err: any) {
       console.error('Login error:', err)
-      setError(err.message || 'Invalid email or password')
+      setError(err.message || 'Invalid username or password')
       toast.error('Login failed')
     } finally {
       setIsSubmitting(false)
