@@ -30,14 +30,14 @@ const Header: React.FC = () => {
       { name: t('nav.submitSuggestion'), href: '/submit-suggestion' },
       ...(user.role === 'admin' ? [
         { name: t('nav.admin'), href: '/admin' },
-        { name: 'Reports', href: '/admin/reports' }
+        { name: t('nav.reports'), href: '/admin/reports' }
       ] : []),
       ...(user.role === 'authority' ? [
         { name: t('nav.authority'), href: '/authority' },
-        { name: 'Reports', href: '/reports' }
+        { name: t('nav.reports'), href: '/reports' }
       ] : []),
       ...(user.role === 'ngo' ? [
-        { name: 'NGO Dashboard', href: '/ngo' }
+        { name: t('nav.ngoDashboard'), href: '/ngo' }
       ] : [])
     ] : [])
   ]
@@ -56,7 +56,6 @@ const Header: React.FC = () => {
                   alt="SULABH Logo" 
                   className="w-8 h-8"
                   onError={(e) => {
-                    // Fallback to text logo if image fails to load
                     const target = e.target as HTMLImageElement;
                     target.style.display = 'none';
                     const fallback = target.nextElementSibling as HTMLElement;
@@ -121,7 +120,7 @@ const Header: React.FC = () => {
                       onClick={() => setIsUserMenuOpen(false)}
                     >
                       <Settings className="w-4 h-4" />
-                      <span>Settings</span>
+                      <span>{t('nav.settings')}</span>
                     </Link>
                     <button
                       onClick={handleLogout}
