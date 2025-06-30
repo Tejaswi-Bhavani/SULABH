@@ -94,15 +94,18 @@ const LoginForm: React.FC = () => {
           .from('profiles')
           .select('email')
           .eq('username', identifier)
-          .single()
           
-        if (profileError || !profileData) {
+        if (profileError) {
+          throw new Error('Invalid username or password')
+        }
+        
+        if (!profileData || profileData.length === 0) {
           throw new Error('Invalid username or password')
         }
         
         // Then login with the email
         authResponse = await supabase.auth.signInWithPassword({
-          email: profileData.email,
+          email: profileData[0].email,
           password: data.password
         })
       }
