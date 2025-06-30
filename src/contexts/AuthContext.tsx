@@ -120,14 +120,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
 
       if (data.user) {
-        // Update profile with additional information
+        // Create profile with user information (INSERT instead of UPDATE)
         const { error: profileError } = await supabase
           .from('profiles')
-          .update({
+          .insert({
+            id: data.user.id,
+            email: data.user.email,
+            first_name: userData.firstName,
+            last_name: userData.lastName,
             phone: userData.phone,
             role: 'citizen'
           })
-          .eq('id', data.user.id)
 
         if (profileError) throw profileError
 
