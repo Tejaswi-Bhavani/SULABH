@@ -413,5 +413,3 @@ const SignupForm: React.FC = () => {
 }
 
 export default SignupForm
-
-export default SignupForm
