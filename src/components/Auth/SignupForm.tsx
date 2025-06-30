@@ -98,7 +98,9 @@ const SignupForm: React.FC = () => {
         .eq('username', data.username)
         .limit(1)
 
-      if (usernameCheckError) throw usernameCheckError
+      if (usernameCheckError && !usernameCheckError.message.includes('row-level security')) {
+        throw usernameCheckError
+      }
 
       if (existingUsers && existingUsers.length > 0) {
         setError('Username is already taken. Please choose another one.')
@@ -106,7 +108,7 @@ const SignupForm: React.FC = () => {
         return
       }
 
-      // Sign up with Supabase Auth
+      // Sign up with Supabase Auth - the trigger will handle profile creation
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
@@ -130,25 +132,6 @@ const SignupForm: React.FC = () => {
       }
 
       if (authData.user) {
-        // Create profile record
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert({
-            id: authData.user.id,
-            email: data.email,
-            first_name: data.firstName,
-            last_name: data.lastName,
-            username: data.username,
-            phone: data.phone || null,
-            role: 'citizen'
-          })
-
-        if (profileError) {
-          // If profile creation fails, clean up the auth user
-          await supabase.auth.signOut()
-          throw profileError
-        }
-
         setSuccess('Account created successfully! Please check your email to verify your account.')
         toast.success('Account created successfully!')
         
