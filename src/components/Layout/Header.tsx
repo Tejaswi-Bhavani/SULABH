@@ -142,10 +142,10 @@ const Header: React.FC = () => {
                   {t('nav.login')}
                 </Link>
                 <Link
-                  to="/register"
+                  to="/signup"
                   className="bg-gradient-to-r from-primary-600 to-secondary-600 text-white hover:from-primary-700 hover:to-secondary-700 font-medium py-2 px-4 rounded-lg transition-all duration-200 transform hover:scale-105 text-sm"
                 >
-                  {t('nav.register')}
+                  {t('nav.signup')}
                 </Link>
               </div>
             )}
@@ -185,11 +185,11 @@ const Header: React.FC = () => {
                     {t('nav.login')}
                   </Link>
                   <Link
-                    to="/register"
+                    to="/signup"
                     className="bg-gradient-to-r from-primary-600 to-secondary-600 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 text-sm mx-3"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    {t('nav.register')}
+                    {t('nav.signup')}
                   </Link>
                 </>
               )}
