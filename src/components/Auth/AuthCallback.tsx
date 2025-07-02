@@ -11,28 +11,36 @@ const AuthCallback: React.FC = () => {
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
-        // Parse URL parameters (not hash, as Supabase uses query params for callbacks)
-        const url = new URL(window.location.href);
-        const code = url.searchParams.get('code');
-        const errorParam = url.searchParams.get('error');
-        const errorDescription = url.searchParams.get('error_description');
-        const type = url.searchParams.get('type');
+        // Parse hash parameters
+        const hash = window.location.hash.substring(1); // Remove '#'
+        const params = new URLSearchParams(hash);
+        const accessToken = params.get('access_token');
+        const errorParam = params.get('error');
+        const errorDescription = params.get('error_description');
+        const type = params.get('type');
 
         if (errorParam) {
           throw new Error(`${errorParam}: ${errorDescription}`);
         }
 
-        if (type === 'email_confirmation' && code) {
-          // Exchange code for session
-          const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-          if (error) throw error;
-
-          console.log('Session established:', data.session);
-          setTimeout(() => {
-            navigate('/login', {
-              state: { message: 'Email verified successfully! You can now log in.' },
+        if (type === 'signup' || type === 'email_confirmation') {
+          // Set session manually using access token
+          if (accessToken) {
+            const { error } = await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: params.get('refresh_token') || '',
             });
-          }, 2000);
+            if (error) throw error;
+
+            console.log('Session established');
+            setTimeout(() => {
+              navigate('/login', {
+                state: { message: 'Email verified successfully! You can now log in.' },
+              });
+            }, 2000);
+          } else {
+            throw new Error('No access token provided');
+          }
         } else if (type === 'recovery') {
           navigate('/reset-password');
         } else {
