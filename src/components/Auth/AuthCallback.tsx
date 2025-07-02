@@ -1,54 +1,53 @@
-import React, { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { supabase } from '../../lib/supabase'
-import { CheckCircle, AlertCircle } from 'lucide-react'
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '../../lib/supabase';
+import { CheckCircle, AlertCircle } from 'lucide-react';
 
 const AuthCallback: React.FC = () => {
-  const navigate = useNavigate()
-  const [error, setError] = useState<string | null>(null)
-  const [verifying, setVerifying] = useState(true)
+  const navigate = useNavigate();
+  const [error, setError] = useState<string | null>(null);
+  const [verifying, setVerifying] = useState(true);
 
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
-        // Get the URL hash
-        const hash = window.location.hash
-        
-        // Check if this is an email verification callback
-        if (hash && hash.includes('type=email_confirmation')) {
-          // Exchange the token for a session
-          const { error: sessionError } = await supabase.auth.getSession()
-          
-          if (sessionError) throw sessionError
-          
-          // Wait a moment to ensure the session is properly set
+        // Parse URL parameters (not hash, as Supabase uses query params for callbacks)
+        const url = new URL(window.location.href);
+        const code = url.searchParams.get('code');
+        const errorParam = url.searchParams.get('error');
+        const errorDescription = url.searchParams.get('error_description');
+        const type = url.searchParams.get('type');
+
+        if (errorParam) {
+          throw new Error(`${errorParam}: ${errorDescription}`);
+        }
+
+        if (type === 'email_confirmation' && code) {
+          // Exchange code for session
+          const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+          if (error) throw error;
+
+          console.log('Session established:', data.session);
           setTimeout(() => {
-            navigate('/login', { 
-              state: { 
-                message: 'Email verified successfully! You can now log in.' 
-              } 
-            })
-          }, 2000)
-        } 
-        // Check if this is a password reset callback
-        else if (hash && hash.includes('type=recovery')) {
-          // Let the ResetPasswordForm handle this
-          navigate('/reset-password')
-        } 
-        // Unknown callback type
-        else {
-          navigate('/login')
+            navigate('/login', {
+              state: { message: 'Email verified successfully! You can now log in.' },
+            });
+          }, 2000);
+        } else if (type === 'recovery') {
+          navigate('/reset-password');
+        } else {
+          throw new Error('Invalid callback type');
         }
       } catch (err: any) {
-        console.error('Auth callback error:', err)
-        setError(err.message || 'An error occurred during authentication')
+        console.error('Auth callback error:', err);
+        setError(err.message || 'An error occurred during authentication');
       } finally {
-        setVerifying(false)
+        setVerifying(false);
       }
-    }
+    };
 
-    handleAuthCallback()
-  }, [navigate])
+    handleAuthCallback();
+  }, [navigate]);
 
   if (verifying) {
     return (
@@ -59,7 +58,7 @@ const AuthCallback: React.FC = () => {
           <p className="text-gray-600">Please wait while we verify your account...</p>
         </div>
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -71,15 +70,12 @@ const AuthCallback: React.FC = () => {
           </div>
           <h2 className="text-xl font-semibold text-gray-900 mb-2">Verification Failed</h2>
           <p className="text-gray-600 mb-6">{error}</p>
-          <button
-            onClick={() => navigate('/login')}
-            className="btn-primary"
-          >
+          <button onClick={() => navigate('/login')} className="btn-primary">
             Back to Login
           </button>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -92,7 +88,7 @@ const AuthCallback: React.FC = () => {
         <p className="text-gray-600 mb-6">Your email has been verified. Redirecting to login...</p>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default AuthCallback
+export default AuthCallback;
